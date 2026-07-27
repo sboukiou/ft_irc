@@ -23,6 +23,10 @@ bool Client::getIsComplete() const
 {
     return is_complete;
 }
+int Client::getFd() const
+{
+    return _fd;
+}
 void Client::setBuffer(std::string buf)
 {
     buffer = buf;

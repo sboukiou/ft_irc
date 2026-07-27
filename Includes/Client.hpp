@@ -20,6 +20,7 @@ class Client{
         bool getIsComplete() const;
         void setBuffer(std::string buf);
         std::string getBuffer() const;
+        int getFd() const;
 };
 
 
