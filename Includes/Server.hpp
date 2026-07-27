@@ -6,8 +6,10 @@
 #include <vector>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <iostream>
 #include <poll.h>
 #include "Client.hpp"
+#include <netinet/in.h>
 
 class Server
 {
@@ -22,6 +24,8 @@ class Server
         Server(const Server& other);
         Server& operator=(const Server& other);
         ~Server();
+
+        void initSocket();
 
 };
 
