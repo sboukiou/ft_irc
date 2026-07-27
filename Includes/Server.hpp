@@ -18,6 +18,10 @@ class Server
         int _port;
         std::string _password;
 
+        std::vector<pollfd> pollfds;
+        std::map<int, Client*> Clients;
+        
+
     public:
         Server(int port, std::string password);
         Server();
@@ -26,6 +30,7 @@ class Server
         ~Server();
 
         void initSocket();
+        void run();
 
 };
 
