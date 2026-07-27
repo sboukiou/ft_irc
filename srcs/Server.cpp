@@ -13,3 +13,19 @@ Server& Server::operator=(const Server& other){
 }
 Server::~Server(){
 }
+
+void Server::initSocket()
+{
+    _socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (_socket < 0)
+        throw std::runtime_error("Error: Socket failed");
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(_port);
+    addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind(_socket, (sockaddr *)&addr, sizeof(addr)) < 0)
+        throw std::runtime_error("Error: Socket failed");
+
+    if (listen(_socket, 1000) < 0)
+        throw std::runtime_error("Error: Socket failed");
+}
