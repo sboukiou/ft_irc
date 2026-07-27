@@ -31,6 +31,17 @@ bool Channel::isEmpty() const
     return _members.empty();
 }
 
+void Channel::addOperator(Client* client) 
+{
+    if (isMember(client))
+        _operators.insert(client);
+}
+
+bool Channel::isOperator(Client* client) const 
+{
+    return _operators.find(client) != _operators.end();
+}
+
 size_t Channel::getMemberCount() const
 {
     return _members.size();
