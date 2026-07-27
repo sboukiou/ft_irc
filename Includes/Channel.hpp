@@ -11,6 +11,7 @@ class Channel
 private:
     std::string       _name;
     std::set<Client*> _members;
+    std::set<Client*> _operators;
 
 public:
     Channel();
@@ -25,6 +26,8 @@ public:
     bool isEmpty() const;
     size_t getMemberCount() const;
 
+    void addOperator(Client* client);
+    bool isOperator(Client* client) const;
 };
 
 #endif
