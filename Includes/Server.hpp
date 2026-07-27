@@ -32,6 +32,9 @@ class Server
         void initSocket();
         void run();
 
+        void acceptClient();
+        void removeClient(Client *client);
+        void handleRequest(pollfd info);
 };
 
 
