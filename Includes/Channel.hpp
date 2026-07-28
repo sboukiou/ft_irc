@@ -12,6 +12,8 @@ private:
     std::string       _name;
     std::set<Client*> _members;
     std::set<Client*> _operators;
+    std::string _topic;
+    bool        _topicRestricted;
 
 public:
     Channel();
@@ -28,6 +30,13 @@ public:
 
     void addOperator(Client* client);
     bool isOperator(Client* client) const;
+
+    void setTopic(const std::string& topic);
+    bool hasTopic() const;
+    const std::string& getTopic() const;
+
+    bool isTopicRestricted() const;
+    void setTopicRestricted(bool value);
 };
 
 #endif
