@@ -1,8 +1,8 @@
 #include "../Includes/Channel.hpp"
 
-Channel::Channel() {}
+Channel::Channel() : _topicRestricted(false) {}
 
-Channel::Channel(const std::string &name) : _name(name) {}
+Channel::Channel(const std::string &name) : _name(name), _topicRestricted(false) {}
 
 Channel::~Channel() {}
 
@@ -45,4 +45,29 @@ bool Channel::isOperator(Client* client) const
 size_t Channel::getMemberCount() const
 {
     return _members.size();
+}
+
+void Channel::setTopic(const std::string &topic)
+{
+    _topic = topic;
+}
+
+bool Channel::hasTopic() const
+{
+    return !_topic.empty();
+}
+
+const std::string &Channel::getTopic() const
+{
+    return _topic;
+}
+
+void Channel::setTopicRestricted(bool val)
+{
+    _topicRestricted = val;
+}
+
+bool Channel::isTopicRestricted() const
+{
+    return _topicRestricted;
 }
