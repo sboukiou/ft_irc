@@ -1,11 +1,21 @@
 #include "Client.hpp"
 
-Client::Client():_fd(-1), is_complete(false) {}
+Client::Client():_fd(-1), disconnected(false) {}
 
-Client::Client(int fd):_fd(fd), is_complete(false){}
+Client::Client(int fd):_fd(fd), disconnected(false){}
 
 Client::Client(const Client& other){
     *this = other;
+}
+
+void Client::setDisconnected(bool status)
+{
+    disconnected = status;
+}
+
+bool Client::getDisconnected()
+{
+    return disconnected;
 }
 
 Client& Client::operator=(const Client& other){
@@ -13,16 +23,11 @@ Client& Client::operator=(const Client& other){
     return *this;
 }
 
-Client::~Client() {}
+Client::~Client() {
+    if (_fd >= 0)
+        close(_fd);
+}
 
-void Client::setIsCoplete(bool status)
-{
-    is_complete = status;
-}
-bool Client::getIsComplete() const
-{
-    return is_complete;
-}
 int Client::getFd() const
 {
     return _fd;
@@ -31,7 +36,7 @@ void Client::appendBuffer(std::string buf)
 {
     buffer.append(buf);
 }
-std::string Client::getBuffer() const
+std::string& Client::getBuffer() 
 {
     return buffer;
 }

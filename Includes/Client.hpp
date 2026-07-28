@@ -1,13 +1,25 @@
 #ifndef Client_hpp
 #define Client_hpp
 
+#include <string>
+#include <map>
+#include <vector>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <iostream>
+#include <poll.h>
+#include "Client.hpp"
+#include <netinet/in.h>
 
 class Client{
     private:
         int _fd;
         std::string buffer;
-        bool is_complete;
+        std::string nickname;
+        std::string username;
+        std::string response;
+
+        bool disconnected;
 
     public:
         Client();
@@ -16,10 +28,10 @@ class Client{
         Client& operator=(const Client& other);
         ~Client();
 
-        void setIsCoplete(bool status);
-        bool getIsComplete() const;
+        void setDisconnected(bool status);
+        bool getDisconnected();
         void appendBuffer(std::string buf);
-        std::string getBuffer() const;
+        std::string& getBuffer() ;
         int getFd() const;
 };
 
