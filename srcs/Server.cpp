@@ -12,6 +12,11 @@ Server& Server::operator=(const Server& other){
     return *this;
 }
 Server::~Server(){
+    if (_socket >= 0)
+        close(_socket);
+    for (std::map<int, Client*>::iterator it = Clients.begin(); it != Clients.end(); it++)
+        delete it->second;
+    Clients.clear();
 }
 
 void Server::initSocket()
@@ -19,7 +24,7 @@ void Server::initSocket()
     _socket = socket(AF_INET, SOCK_STREAM, 0);
     if (_socket < 0)
         throw std::runtime_error("Error: Socket failed");
-    sockaddr_in addr;
+    sockaddr_in addr = {};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
     addr.sin_addr.s_addr = INADDR_ANY;
@@ -37,7 +42,7 @@ void Server::initSocket()
 
 void Server::acceptClient()
 {
-    struct sockaddr_in client_info;
+    sockaddr_in client_info = {};
     socklen_t client_len = sizeof(client_info);
 
     int client_fd = accept(_socket, (struct sockaddr *)&client_info, &client_len);
@@ -67,17 +72,19 @@ void Server::removeClient(Client *client)
             break;
         }
     }
-    close(client->getFd());
     delete client;
 }
 
-int checkEndOfRequest(std::string buf)
+void Server::extractCommand(Client *client)
 {
-    if (buf.size() < 2)
-        return 1;
-    if (*buf.rbegin() == '\n' && *(buf.rbegin() - 1) == '\r')
-        return 0;
-    return 1;
+    size_t pos;
+    while ((pos = client->getBuffer().find("\n")) != std::string::npos && !client->getDisconnected())
+    {
+        executeCommand(client, client->getBuffer().substr(0, pos));
+        client->getBuffer().erase(0, pos + 1);
+    }
+    if (client->getDisconnected())
+        removeClient(client);
 }
 
 void Server::readRequest(Client *client)
@@ -96,11 +103,8 @@ void Server::readRequest(Client *client)
         removeClient(client);
         return ;
     }
-    buffer[read] = '\0';
-    client->appendBuffer(buffer);
-    if (checkEndOfRequest(client->getBuffer()))
-        return ;
-    client->setIsCoplete(true);
+    client->appendBuffer(std::string(buffer, read));
+    extractCommand(client);
 }
 
 void Server::handleRequest(pollfd info)
@@ -110,27 +114,35 @@ void Server::handleRequest(pollfd info)
         if (info.fd == _socket)
             std::cerr << "Error: client couldn't connect\n";
         else
-            removeClient(Clients[info.fd]);
+        {
+            std::map<int, Client*>::iterator it = Clients.find(info.fd);
+            if (it != Clients.end())
+                removeClient(it->second);
+        }
         return ;
     }
     if (info.fd == _socket && (info.revents & POLLIN))
         acceptClient();
     else if (info.revents & POLLIN)
     {
-        readRequest(Clients[info.fd]);
+        std::map<int, Client*>::iterator it = Clients.find(info.fd);
+        if (it != Clients.end())
+            readRequest(it->second);
     }
-
-
+    index++;
 }
 
 void Server::run()
 {
+    initSocket();
+
     while (true)
     {
         if (poll(&pollfds[0], pollfds.size(), -1) < 0)
             throw std::runtime_error("Error: poll failed");
-        for (size_t i = 0; i < pollfds.size(); i++)
-            handleRequest(pollfds[i]);
+        index = 0;
+        while (index < pollfds.size())
+            handleRequest(pollfds[index]);
 
     }
 }

@@ -20,6 +20,7 @@ class Server
 
         std::vector<pollfd> pollfds;
         std::map<int, Client*> Clients;
+        size_t index;
         
 
     public:
@@ -33,6 +34,8 @@ class Server
         void run();
 
         void acceptClient();
+        void extractCommand(Client *client);
+        void executeCommand(Client *client, std::string command);
         void removeClient(Client *client);
         void handleRequest(pollfd info);
         void readRequest(Client *client);
