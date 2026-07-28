@@ -27,9 +27,9 @@ int Client::getFd() const
 {
     return _fd;
 }
-void Client::setBuffer(std::string buf)
+void Client::appendBuffer(std::string buf)
 {
-    buffer = buf;
+    buffer.append(buf);
 }
 std::string Client::getBuffer() const
 {

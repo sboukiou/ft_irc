@@ -18,7 +18,7 @@ class Client{
 
         void setIsCoplete(bool status);
         bool getIsComplete() const;
-        void setBuffer(std::string buf);
+        void appendBuffer(std::string buf);
         std::string getBuffer() const;
         int getFd() const;
 };

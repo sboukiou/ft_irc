@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-Server::Server(int port, std::string password): _port(port), _password(password){
+Server::Server(int port, std::string password):_socket(-1), _port(port), _password(password){
 }
 Server::Server():_socket(-1), _port(-1){
 }
@@ -24,10 +24,15 @@ void Server::initSocket()
     addr.sin_port = htons(_port);
     addr.sin_addr.s_addr = INADDR_ANY;
     if (bind(_socket, (sockaddr *)&addr, sizeof(addr)) < 0)
-        throw std::runtime_error("Error: Socket failed");
+        throw std::runtime_error("Error: bind failed");
 
     if (listen(_socket, 1000) < 0)
-        throw std::runtime_error("Error: Socket failed");
+        throw std::runtime_error("Error: listen failed");
+    pollfd info;
+    info.fd = _socket;
+    info.events = POLLIN;
+    info.revents = 0;
+    pollfds.push_back(info);
 }
 
 void Server::acceptClient()
@@ -44,6 +49,7 @@ void Server::acceptClient()
     pollfd info;
     info.fd = client_fd;
     info.events = POLLIN;
+    info.revents = 0;
     pollfds.push_back(info);
     Client *client = new Client(client_fd);
     Clients[client_fd] = client;
@@ -61,12 +67,45 @@ void Server::removeClient(Client *client)
             break;
         }
     }
+    close(client->getFd());
     delete client;
+}
+
+int checkEndOfRequest(std::string buf)
+{
+    if (buf.size() < 2)
+        return 1;
+    if (*buf.rbegin() == '\n' && *(buf.rbegin() - 1) == '\r')
+        return 0;
+    return 1;
+}
+
+void Server::readRequest(Client *client)
+{
+    char buffer[1024];
+    ssize_t read = recv(client->getFd(), buffer, sizeof(buffer), 0);
+    if (read < 0)
+    {
+        std::cerr << "Error: recv failed\n";
+        removeClient(client);
+        return ;
+    }
+    if (read == 0)
+    {
+        std::cerr << "Client Disconnected\n";
+        removeClient(client);
+        return ;
+    }
+    buffer[read] = '\0';
+    client->appendBuffer(buffer);
+    if (checkEndOfRequest(client->getBuffer()))
+        return ;
+    client->setIsCoplete(true);
 }
 
 void Server::handleRequest(pollfd info)
 {
-    if (info.revents & (POLLERR || POLLHUP))
+    if (info.revents & (POLLERR | POLLHUP))
     {   
         if (info.fd == _socket)
             std::cerr << "Error: client couldn't connect\n";
@@ -74,11 +113,11 @@ void Server::handleRequest(pollfd info)
             removeClient(Clients[info.fd]);
         return ;
     }
-    if (info.fd == _socket && info.revents)
+    if (info.fd == _socket && (info.revents & POLLIN))
         acceptClient();
-    else
+    else if (info.revents & POLLIN)
     {
-        
+        readRequest(Clients[info.fd]);
     }
 
 
@@ -92,7 +131,6 @@ void Server::run()
             throw std::runtime_error("Error: poll failed");
         for (size_t i = 0; i < pollfds.size(); i++)
             handleRequest(pollfds[i]);
-
 
     }
 }

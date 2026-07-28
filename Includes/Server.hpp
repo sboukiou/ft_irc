@@ -35,6 +35,8 @@ class Server
         void acceptClient();
         void removeClient(Client *client);
         void handleRequest(pollfd info);
+        void readRequest(Client *client);
+
 };
 
 
