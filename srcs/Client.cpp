@@ -17,7 +17,30 @@ bool Client::getDisconnected()
 {
     return disconnected;
 }
-
+void Client::setNickname(std::string nName)
+{   
+    nickname = nName;
+}
+void Client::setResponse(std::string res)
+{
+    response = res;
+}
+void Client::setUsername(std::string uName)
+{
+    username = uName;
+}
+std::string Client::getNickname()
+{
+    return nickname;
+}
+std::string Client::getUsername()
+{
+    return username;
+}
+std::string Client::getResponse()
+{
+    return response;
+}
 Client& Client::operator=(const Client& other){
     (void) other;
     return *this;

@@ -28,6 +28,12 @@ class Client{
         Client& operator=(const Client& other);
         ~Client();
 
+        void setNickname(std::string nName);
+        void setResponse(std::string res);
+        void setUsername(std::string uName);
+        std::string getNickname();
+        std::string getUsername();
+        std::string getResponse();
         void setDisconnected(bool status);
         bool getDisconnected();
         void appendBuffer(std::string buf);
