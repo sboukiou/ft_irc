@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <iostream>
 #include <poll.h>
-#include "Client.hpp"
 #include <netinet/in.h>
 
 class Client{
