@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <poll.h>
-#include "../Includes/Client.hpp"
+#include "../include/Client.hpp"
 #include <netinet/in.h>
 
 class Server
