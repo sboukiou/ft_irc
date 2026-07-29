@@ -1,4 +1,4 @@
-#include "../Includes/Channel.hpp"
+#include "../include/Channel.hpp"
 
 Channel::Channel() : _topicRestricted(false) {}
 
