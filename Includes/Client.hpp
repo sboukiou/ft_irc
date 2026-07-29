@@ -29,7 +29,7 @@ class Client{
         ~Client();
 
         void setNickname(std::string nName);
-        void setResponse(std::string res);
+        void appendToResponse(std::string res);
         void setUsername(std::string uName);
         std::string getNickname();
         std::string getUsername();
@@ -37,7 +37,7 @@ class Client{
         void setDisconnected(bool status);
         bool getDisconnected();
         void appendBuffer(std::string buf);
-        std::string& getBuffer() ;
+        std::string getBuffer() ;
         int getFd() const;
 };
 

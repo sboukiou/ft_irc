@@ -107,6 +107,17 @@ void Server::readRequest(Client *client)
     extractCommand(client);
 }
 
+int Server::sendResponse(Client *client)
+{
+    ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), sizeof(client->getResponse()), 0); 
+    if (bytesend < 0)
+    {
+        removeClient(client);
+        return 1;
+    }
+    return 0;
+}
+
 void Server::handleRequest(pollfd info)
 {
     if (info.revents & (POLLERR | POLLHUP))
@@ -128,6 +139,13 @@ void Server::handleRequest(pollfd info)
         std::map<int, Client*>::iterator it = Clients.find(info.fd);
         if (it != Clients.end())
             readRequest(it->second);
+    }
+    if (info.revents & POLLOUT)
+    {
+        info.events = POLLOUT;
+        if (sendResponse(Clients[info.fd]))
+            return ;
+        info.events = POLLIN;
     }
     index++;
 }

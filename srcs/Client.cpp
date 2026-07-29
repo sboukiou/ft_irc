@@ -21,9 +21,9 @@ void Client::setNickname(std::string nName)
 {   
     nickname = nName;
 }
-void Client::setResponse(std::string res)
+void Client::appendToResponse(std::string res)
 {
-    response = res;
+    response.append(res);
 }
 void Client::setUsername(std::string uName)
 {
@@ -59,7 +59,7 @@ void Client::appendBuffer(std::string buf)
 {
     buffer.append(buf);
 }
-std::string& Client::getBuffer() 
+std::string Client::getBuffer() 
 {
     return buffer;
 }
