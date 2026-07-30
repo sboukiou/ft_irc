@@ -38,7 +38,7 @@ class Server
         void executeCommand(Client *client, std::string command);
         void removeClient(Client *client);
         void handleRequest(pollfd &info);
-        void readRequest(Client *client);
+        int readRequest(Client *client);
         int sendResponse(Client *client);
 
 };
