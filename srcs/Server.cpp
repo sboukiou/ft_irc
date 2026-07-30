@@ -80,6 +80,7 @@ void Server::extractCommand(Client *client)
     size_t pos;
     while ((pos = client->getBuffer().find("\n")) != std::string::npos && !client->getDisconnected())
     {
+		/* TODO: Implement this */
         executeCommand(client, client->getBuffer().substr(0, pos));
         client->getBuffer().erase(0, pos + 1);
     }
@@ -163,4 +164,18 @@ void Server::run()
             handleRequest(pollfds[index]);
 
     }
+}
+
+
+void	Server::executeCommand(Client *client, std::string command) {
+	if (client == NULL)
+		throw(std::runtime_error("Client [NULL] sent the command: " + command));
+	else {
+		std::string response;
+		response += "Client: ";
+		response += client->getNickname();
+		response += "Has requesed the command: " ;
+		response += command;
+		client->appendToResponse(response);
+	}
 }
