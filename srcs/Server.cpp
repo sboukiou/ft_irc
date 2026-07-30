@@ -110,7 +110,7 @@ void Server::readRequest(Client *client)
 
 int Server::sendResponse(Client *client)
 {
-    ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), sizeof(client->getResponse()), 0); 
+    ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), client->getResponse().size(), 0); 
     if (bytesend < 0)
     {
         removeClient(client);
@@ -119,7 +119,7 @@ int Server::sendResponse(Client *client)
     return 0;
 }
 
-void Server::handleRequest(pollfd info)
+void Server::handleRequest(pollfd &info)
 {
     if (info.revents & (POLLERR | POLLHUP))
     {   
