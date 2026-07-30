@@ -1,5 +1,5 @@
 #include "../include/Server.hpp"
-#include "../include/Client.hpp"
+#include "../include/macros.hpp"
 #include <cstdlib>
 
 
@@ -14,6 +14,7 @@ int main(int ac, char **av) {
 	password = std::string(av[2]);
 	Server server(port, password);
 
+	LOG("Launching the server");
 	server.run();
 	return (0);
 }
