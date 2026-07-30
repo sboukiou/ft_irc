@@ -9,6 +9,7 @@ int main(int ac, char **av) {
 
 	if (ac != 3) {
 		std::cerr << "Invalid number of arguments!\n";
+		return (0);
 	}
 	port = atoi(av[1]);
 	password = std::string(av[2]);
