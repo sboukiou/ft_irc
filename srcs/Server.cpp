@@ -174,7 +174,6 @@ void	Server::executeCommand(Client *client, std::string command) {
 		std::string response;
 		response += "Client: ";
 		response += client->getNickname();
-		response += client->getNickname();
 		response += "Has requesed the command: " ;
 		response += command;
 		client->appendToResponse(response);
