@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-enum requestType {
+enum commandType {
 	PASS,
 	NICK,
 	USER,
@@ -28,6 +28,7 @@ class Command {
 	private:
 		std::string _name;
 		std::vector<std::string> _args;
+		commandType _type;
 	public:
 		Command();
 		Command(std::string line);
