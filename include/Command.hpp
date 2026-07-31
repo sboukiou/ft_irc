@@ -22,6 +22,8 @@ enum commandType {
 	LIST,
 	WHO,
 	WHOIS,
+	HELP,
+	NONE
 };
 
 class Command {
@@ -29,6 +31,8 @@ class Command {
 		std::string _name;
 		std::vector<std::string> _args;
 		commandType _type;
+		void _parseLine(std::string line);
+		void _setCommandType(void);
 	public:
 		Command();
 		Command(std::string line);
@@ -36,6 +40,7 @@ class Command {
 		Command &operator=(const Command &other);
 		~Command();
 		const std::string &getName(void) const;
+		const commandType &getType(void) const;
 		const std::vector<std::string> &getArgs(void) const;
 };
 
