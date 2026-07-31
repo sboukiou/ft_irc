@@ -3,8 +3,8 @@ CPPFLAGS=-Wall -Werror -Wextra -std=c++98
 
 SRCS_DIR=srcs
 OBJS_DIR=objs
-SRCS=$(SRCS_DIR)/Server.cpp  $(SRCS_DIR)/Client.cpp $(SRCS_DIR)/main.cpp $(SRCS_DIR)/Command.cpp
-OBJS=$(OBJS_DIR)/Server.o $(OBJS_DIR)/Client.o $(OBJS_DIR)/main.o $(OBJS_DIR)/Command.o
+SRCS=$(SRCS_DIR)/Server.cpp  $(SRCS_DIR)/Client.cpp $(SRCS_DIR)/main.cpp $(SRCS_DIR)/Command.cpp $(SRCS_DIR)/Response.cpp
+OBJS=$(OBJS_DIR)/Server.o $(OBJS_DIR)/Client.o $(OBJS_DIR)/main.o $(OBJS_DIR)/Command.o $(OBJS_DIR)/Response.o
 RM=rm -rf
 NAME=ircserv
 
