@@ -11,13 +11,15 @@ class Response {
 		std::string _buffer;
 		Command cmd;
 		Client *client;
+		std::string _password;
 		void	_nickNameCmd();
 		void	_helpCmd();
 		void	_quitCmd();
 		void	_userCmd();
+		void	_passCmd();
 	public:
 		Response();
-		Response(Command &cmd, Client *cl);
+		Response(Command &cmd, Client *cl, std::string password);
 		Response(const Response &other);
 		Response &operator=(const Response &other);
 		std::string getBuffer(void) const;
