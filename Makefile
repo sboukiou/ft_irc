@@ -8,6 +8,8 @@ OBJS=$(OBJS_DIR)/Server.o $(OBJS_DIR)/Client.o $(OBJS_DIR)/main.o
 RM=rm -rf
 NAME=ircserv
 
+all: $(NAME)
+
 $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp | $(OBJS_DIR)
 	$(CXX) $(CPPFLAGS) -c $< -o $@
 
@@ -17,7 +19,6 @@ $(OBJS_DIR):
 $(NAME): $(OBJS)
 	$(CXX) $(CPPFLAGS) $(OBJS) -o $(NAME)
 
-all: $(NAME)
 
 clean:
 	$(RM) $(OBJS)
