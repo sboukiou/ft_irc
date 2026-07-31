@@ -7,6 +7,11 @@
 # define BLUE    "\x1b[34m"
 # define RESET   "\x1b[0m"
 
+#include <string>
+#include <vector>
+#include <iostream>
+#include <stdexcept>
+#include <cstdlib>
 
 # define LOG(X) std::cout << BLUE << X << RESET << std::endl;
 # define WARN(X) std::cout << YEL << X << RESET << std::endl;
