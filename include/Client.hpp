@@ -32,11 +32,11 @@ class Client{
         void setUsername(std::string uName);
         std::string getNickname();
         std::string getUsername();
-        std::string getResponse();
+        std::string& getResponse();
         void setDisconnected(bool status);
         bool getDisconnected();
         void appendBuffer(std::string buf);
-        std::string getBuffer() ;
+        std::string& getBuffer() ;
         int getFd() const;
 };
 

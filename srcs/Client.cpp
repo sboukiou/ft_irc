@@ -37,7 +37,7 @@ std::string Client::getUsername()
 {
     return username;
 }
-std::string Client::getResponse()
+std::string& Client::getResponse()
 {
     return response;
 }
@@ -59,7 +59,7 @@ void Client::appendBuffer(std::string buf)
 {
     buffer.append(buf);
 }
-std::string Client::getBuffer() 
+std::string& Client::getBuffer() 
 {
     return buffer;
 }

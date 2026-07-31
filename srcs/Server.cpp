@@ -24,6 +24,10 @@ void Server::initSocket()
     _socket = socket(AF_INET, SOCK_STREAM, 0);
     if (_socket < 0)
         throw std::runtime_error("Error: Socket failed");
+    int opt = 1;;
+    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) 
+        throw std::runtime_error("Error");
+
     sockaddr_in addr = {};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
@@ -62,7 +66,6 @@ void Server::acceptClient()
 
 void Server::removeClient(Client *client)
 {
-    std::cerr << "Error: remove client fd=" << client->getFd() << std::endl;
     Clients.erase(client->getFd());
     for (std::vector<pollfd>::iterator it = pollfds.begin(); it != pollfds.end(); it++)
     {
@@ -81,14 +84,17 @@ void Server::extractCommand(Client *client)
     while ((pos = client->getBuffer().find("\n")) != std::string::npos && !client->getDisconnected())
     {
 		/* TODO: Implement this */
-        executeCommand(client, client->getBuffer().substr(0, pos));
+        size_t commandEnd = pos;
+        if (commandEnd > 0 && client->getBuffer()[commandEnd - 1] == '\r')
+            commandEnd--;
+        executeCommand(client, client->getBuffer().substr(0, commandEnd));
         client->getBuffer().erase(0, pos + 1);
     }
     if (client->getDisconnected())
         removeClient(client);
 }
 
-void Server::readRequest(Client *client)
+int Server::readRequest(Client *client)
 {
     char buffer[1024];
     ssize_t read = recv(client->getFd(), buffer, sizeof(buffer), 0);
@@ -96,31 +102,38 @@ void Server::readRequest(Client *client)
     {
         std::cerr << "Error: recv failed\n";
         removeClient(client);
-        return ;
+        return 1;
     }
     if (read == 0)
     {
         std::cerr << "Client Disconnected\n";
         removeClient(client);
-        return ;
+        return 1;
     }
     client->appendBuffer(std::string(buffer, read));
     extractCommand(client);
+    return 0;
 }
 
 int Server::sendResponse(Client *client)
 {
-    ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), sizeof(client->getResponse()), 0); 
+    ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), client->getResponse().size(), 0); 
     if (bytesend < 0)
     {
         removeClient(client);
         return 1;
     }
+    client->getResponse().erase(0, bytesend);
     return 0;
 }
 
-void Server::handleRequest(pollfd info)
+void Server::handleRequest(pollfd &info)
 {
+    if (info.revents == 0)
+    {
+        index++;
+        return ;
+    }
     if (info.revents & (POLLERR | POLLHUP))
     {   
         if (info.fd == _socket)
@@ -134,20 +147,30 @@ void Server::handleRequest(pollfd info)
         return ;
     }
     if (info.fd == _socket && (info.revents & POLLIN))
+    {
         acceptClient();
-    else if (info.revents & POLLIN)
+        index++;
+        return ;
+    }
+    if (info.revents & POLLIN)
     {
         std::map<int, Client*>::iterator it = Clients.find(info.fd);
         if (it != Clients.end())
-            readRequest(it->second);
+        {
+            if (readRequest(it->second))
+                return ;
+
+        }
     }
     if (info.revents & POLLOUT)
     {
-        info.events = POLLOUT;
         if (sendResponse(Clients[info.fd]))
             return ;
-        info.events = POLLIN;
     }
+    if (Clients[info.fd]->getResponse().size() > 0)
+        info.events |= POLLOUT;
+    else
+        info.events &= ~POLLOUT;
     index++;
 }
 
@@ -162,7 +185,6 @@ void Server::run()
         index = 0;
         while (index < pollfds.size())
             handleRequest(pollfds[index]);
-
     }
 }
 
