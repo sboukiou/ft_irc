@@ -5,17 +5,19 @@
 #include "./Command.hpp"
 #include "Client.hpp"
 
+
 class Response {
 	private:
 		std::string _buffer;
 		Command cmd;
-		Client client;
+		Client *client;
 		void	_nickNameCmd();
 		void	_helpCmd();
 		void	_quitCmd();
+		void	_userCmd();
 	public:
 		Response();
-		Response(Command &cmd, Client &cl);
+		Response(Command &cmd, Client *cl);
 		Response(const Response &other);
 		Response &operator=(const Response &other);
 		std::string getBuffer(void) const;
