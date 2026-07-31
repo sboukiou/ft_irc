@@ -1,5 +1,4 @@
 #include "../include/Command.hpp"
-#include <stdexcept>
 
 Command::Command(): _name(""), _args(0) {}
 Command::Command(std::string line) {
@@ -9,10 +8,14 @@ Command::Command(std::string line) {
 		throw(std::runtime_error("Invalid command"));
 	_name = line.substr(start, end - start);
 	start = end + 1;
+	while (line[start] == ' ')
+		start += 1;
 	while (start < line.size() && end != std::string::npos) {
-		end = line.find(' ');
+		end = line.find(' ', start);
 		_args.push_back(line.substr(start, end -  start));
 		start = end + 1;
+		while (line[start] == ' ')
+			start += 1;
 	}
 }
 Command::Command(const Command &other) {
