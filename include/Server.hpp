@@ -33,6 +33,7 @@ class Server
         void initSocket();
         void run();
 
+        std::string getPass();
         void acceptClient();
         void extractCommand(Client *client);
         void executeCommand(Client *client, std::string command);

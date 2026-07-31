@@ -22,6 +22,11 @@ Server::~Server(){
     Clients.clear();
 }
 
+std::string Server::getPass()
+{
+    return _password;
+}
+
 void Server::initSocket()
 {
     _socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -201,14 +206,13 @@ void Server::run()
     }
 }
 
-
 void	Server::executeCommand(Client *client, std::string command) {
 	if (client == NULL)
 		throw(std::runtime_error("Client [NULL] sent the command: " + command));
 	std::string response;
 	try {
 		Command cmd(command);
-		Response resp(cmd, *client);
+		Response resp(cmd, client, _password);
 		resp.runCmd();
 		response = resp.getBuffer();
 	}
