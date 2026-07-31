@@ -126,6 +126,17 @@ int Server::sendResponse(Client *client)
         removeClient(client);
         return 1;
     }
+    else if (bytesend == 0)
+    {
+        std::cerr << "Client Disconnected\n";
+        removeClient(client);
+        return 1;
+    }
+    else if (client->getDisconnected())
+    {
+        removeClient(client);
+        return 1;
+    }
     client->getResponse().erase(0, bytesend);
     return 0;
 }
