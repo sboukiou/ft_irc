@@ -1,4 +1,7 @@
 #include "../include/Server.hpp"
+#include "../include/macros.hpp"
+#include "../include/Response.hpp"
+#include "../include/Command.hpp"
 
 Server::Server(int port, std::string password):_socket(-1), _port(port), _password(password){
 }
@@ -155,13 +158,12 @@ void Server::handleRequest(pollfd &info)
     if (info.revents & POLLIN)
     {
         std::map<int, Client*>::iterator it = Clients.find(info.fd);
-        if (it != Clients.end())
-        {
-            if (readRequest(it->second))
-                return ;
-
-        }
-    }
+		if (it != Clients.end())
+		{
+			if (readRequest(it->second))
+				return ;
+		}
+	}
     if (info.revents & POLLOUT)
     {
         if (sendResponse(Clients[info.fd]))
@@ -192,12 +194,15 @@ void Server::run()
 void	Server::executeCommand(Client *client, std::string command) {
 	if (client == NULL)
 		throw(std::runtime_error("Client [NULL] sent the command: " + command));
-	else {
-		std::string response;
-		response += "Client: ";
-		response += client->getNickname();
-		response += "Has requesed the command: " ;
-		response += command;
-		client->appendToResponse(response);
+	std::string response;
+	try {
+		Command cmd(command);
+		Response resp(cmd, *client);
+		resp.runCmd();
+		response = resp.getBuffer();
 	}
+	catch (std::runtime_error &e) {
+		response = "Error: " + std::string(e.what());
+	}
+	client->appendToResponse(response);
 }
