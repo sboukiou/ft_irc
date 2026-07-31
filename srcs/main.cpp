@@ -1,6 +1,5 @@
 #include "../include/Server.hpp"
 #include "../include/macros.hpp"
-#include <cstdlib>
 
 
 int main(int ac, char **av) {
@@ -16,6 +15,14 @@ int main(int ac, char **av) {
 	Server server(port, password);
 
 	LOG("Launching the server");
-	server.run();
+	try {
+		server.run();
+	}
+	catch (std::exception &e) {
+		ERR(e.what());
+		// TODO: Implement the cleanup method for the server
+		// server.cleanup();
+		return (0);
+	}
 	return (0);
 }
