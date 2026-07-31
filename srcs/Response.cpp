@@ -20,8 +20,8 @@ std::string Response::getBuffer(void) const { return (_buffer); }
 void	Response::_helpCmd() {
 	_buffer.clear();
 	_buffer += YEL;
-	_buffer += "Man Page of ircserv:\nUsage: <COMMAND> <ARGS>\n\nAvailable Commands:\n\n";
-	_buffer += "HELP: Shows this help menu\nNICK: Sets the user nickname on the server and Displays it\n";
+	_buffer += "Man Page of ircserv:\nUsage: <COMMAND> <ARGS>\nAvailable Commands:\n";
+	_buffer += "HELP: Shows this help menu\nNICK: Sets the user nickname on the server";
 	_buffer += RESET;
 	_buffer += "\n\r";
 }
@@ -30,16 +30,41 @@ void	Response::_nickNameCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() < 1)
-		throw("Invalid number of args for NICK command!");
+		throw(std::runtime_error("Invalid number of args for NICK command!"));
 	client.setNickname(args[0]);
-	_buffer += client.getNickname();
-	_buffer += "\n\r";
+	_buffer += "Done, New nickname is [" + client.getNickname() + "]";
+	_buffer += "\n\n\r";
+}
+
+void	Response::_quitCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	if (args.size() != 0)
+		throw(std::runtime_error("Invalid number of args for QUIT command!"));
+	_buffer += "By!";
+	_buffer += "\n\n\r";
 }
 
 void	Response::runCmd() {
 
-	if (cmd.getType() == HELP)
-		_helpCmd();
-	else
-		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
+	try {
+		if (cmd.getType() == HELP)
+			_helpCmd();
+		else if (cmd.getType() == NICK)
+			_nickNameCmd();
+		else if (cmd.getType() == QUIT)
+			_quitCmd();
+		else {
+			std::cout << "Type is : " << cmd.getType() << std::endl;
+			throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
+		}
+	}
+	catch (std::exception &e) {
+		_buffer.clear();
+	_buffer += RED;
+	_buffer += "Error: ";
+	_buffer += e.what();
+	_buffer += RESET;
+	_buffer += "\n\n\r";
+	}
 }

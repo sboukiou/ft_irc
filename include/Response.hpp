@@ -12,6 +12,7 @@ class Response {
 		Client client;
 		void	_nickNameCmd();
 		void	_helpCmd();
+		void	_quitCmd();
 	public:
 		Response();
 		Response(Command &cmd, Client &cl);
