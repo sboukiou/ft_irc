@@ -22,6 +22,7 @@ class Response {
 		void	_userCmd();
 		void	_passCmd();
 		void	_pingCmd();
+		void	_clearCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
