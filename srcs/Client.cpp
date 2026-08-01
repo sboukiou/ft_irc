@@ -39,6 +39,25 @@ void Client::setNickname(std::string nName)
 {   
     nickname = nName;
 }
+
+void Client::appendChannels(Channel* channel){
+    if (channels.count(channel))
+        return ;
+    channels.insert(channel);
+}
+
+std::set<Channel*>& Client::getChannels(){
+    return channels;
+}
+
+void Client::setIsOperator(bool status){
+    isOperator = status;
+}
+
+bool Client::getIsOperator(){
+    return isOperator;
+}
+
 void Client::appendToResponse(std::string res)
 {
     response.append(res);
