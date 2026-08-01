@@ -1,7 +1,7 @@
 #include "../include/Response.hpp"
 
 Response::Response(): _buffer(""){}
-Response::Response(Command &c, Client *cl, std::string pass): _buffer(""), cmd(c), client(cl), _password(pass) {}
+Response::Response(Command &c, Client *cl, std::string pass, ChannelManager &manager, Server *server): _buffer(""), cmd(c), client(cl), _password(pass), manager(manager), server(server) {}
 Response::Response(const Response &other): _buffer(other._buffer),
 	cmd(other.cmd), client(other.client) {}
 Response &Response::operator=(const Response &other) {

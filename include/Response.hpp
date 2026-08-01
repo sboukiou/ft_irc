@@ -4,6 +4,8 @@
 #include "./macros.hpp"
 #include "./Command.hpp"
 #include "Client.hpp"
+#include "ChannelManager.hpp"
+#include "Server.hpp"
 
 
 class Response {
@@ -12,6 +14,8 @@ class Response {
 		Command cmd;
 		Client *client;
 		std::string _password;
+		ChannelManager manager;
+		Server		*server;
 		void	_nickNameCmd();
 		void	_helpCmd();
 		void	_quitCmd();
@@ -19,7 +23,7 @@ class Response {
 		void	_passCmd();
 	public:
 		Response();
-		Response(Command &cmd, Client *cl, std::string password);
+		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
 		Response &operator=(const Response &other);
 		std::string getBuffer(void) const;
