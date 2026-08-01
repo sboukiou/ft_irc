@@ -10,7 +10,8 @@
 #include <poll.h>
 #include <set>
 #include <netinet/in.h>
-#include "Channel.hpp"
+
+class Channel;
 
 class Client{
     private:
@@ -25,7 +26,6 @@ class Client{
         bool disconnected;
         bool registered;
         bool authenticated;
-        bool isOperator;
 
     public:
         Client();
@@ -34,10 +34,9 @@ class Client{
         Client& operator=(const Client& other);
         ~Client();
 
+        void removeChannel(Channel *channel);
         void appendChannels(Channel* channel);
         std::set<Channel*>& getChannels();
-        void setIsOperator(bool status);
-        bool getIsOperator();
         void setNickname(std::string nName);
         void setRealname(std::string rName);
         void appendToResponse(std::string res);
