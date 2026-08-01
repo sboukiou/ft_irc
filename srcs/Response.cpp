@@ -90,7 +90,7 @@ void	Response::_passCmd()
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() != 1)
-		throw(std::runtime_error("Invalid number of args for USER command!"));
+		throw(std::runtime_error("Invalid number of args for password command!"));
 	if (args[0] != _password)
 		throw(std::runtime_error("Invalid password!"));
 	client->setAuthenticated(true);
@@ -113,6 +113,14 @@ void	Response::_pingCmd()
 	_buffer += RESET;
 	_buffer += "\r\n";
 }
+void ::Response::_clearCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	if (args.size() != 0)
+		throw(std::runtime_error("Invalid number of args for clear command!"));
+	_buffer.clear();
+	_buffer = "\x1B[3J\x1B[2J\x1B[H";
+}
+
 void	Response::runCmd() {
 
 	try {
@@ -128,6 +136,8 @@ void	Response::runCmd() {
 			_passCmd();
 		else if (cmd.getType() == PING)
 			_pingCmd();
+		else if (cmd.getType() == CLEAR)
+			_clearCmd();
 		else {
 			std::cout << "Type is : " << cmd.getType() << std::endl;
 			throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
