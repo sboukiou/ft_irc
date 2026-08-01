@@ -21,6 +21,8 @@ class Response {
 		void	_quitCmd();
 		void	_userCmd();
 		void	_passCmd();
+		void	_joinCmd();
+		void	_kickCmd();
 	public:
 		Response();
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
