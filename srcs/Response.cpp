@@ -98,8 +98,18 @@ void	Response::_passCmd()
 	_buffer.clear();
 	if (args.size() != 1)
 		throw(std::runtime_error("Invalid number of args for password command!"));
-	if (args[0] != _password)
+	if (client->getAuthenticated() == true) {
+		_buffer.clear();
+		_buffer += YEL;
+		_buffer +=  "User already authenticated";
+		_buffer += RESET;
+		_buffer += "\r\n";
+		return ;
+	}
+	if (args[0] != _password) {
+		client->setDisconnected(true);
 		throw(std::runtime_error("Invalid password!"));
+	}
 	client->setAuthenticated(true);
 	_buffer += GREEN;
 	_buffer += "Done, New client authenticated";
