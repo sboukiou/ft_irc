@@ -1,9 +1,8 @@
 #include "../include/Response.hpp"
 
-Response::Response(): _buffer(""){}
 Response::Response(Command &c, Client *cl, std::string pass, ChannelManager &manager, Server *server): _buffer(""), cmd(c), client(cl), _password(pass), manager(manager), server(server) {}
 Response::Response(const Response &other): _buffer(other._buffer),
-	cmd(other.cmd), client(other.client) {}
+	cmd(other.cmd), client(other.client), manager(other.manager) {}
 Response &Response::operator=(const Response &other) {
 	if (this != &other) {
 		cmd = other.cmd;

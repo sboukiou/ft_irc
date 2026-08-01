@@ -14,7 +14,7 @@ class Response {
 		Command cmd;
 		Client *client;
 		std::string _password;
-		ChannelManager manager;
+		ChannelManager &manager;
 		Server		*server;
 		void	_nickNameCmd();
 		void	_helpCmd();
@@ -23,7 +23,6 @@ class Response {
 		void	_passCmd();
 		void	_pingCmd();
 	public:
-		Response();
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
 		Response &operator=(const Response &other);
