@@ -15,6 +15,7 @@ public:
     ~ChannelManager();
 
     Channel *getOrCreateChan(const std::string &name) ;
+    Channel *getOrCreateChan(const std::string &name, std::string pass) ;
     Channel *find(const std::string &name) ;
     void removeIfEmpty(const std::string &name);
 };

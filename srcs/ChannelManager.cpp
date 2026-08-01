@@ -19,6 +19,19 @@ Channel *ChannelManager::getOrCreateChan(const std::string &name)
     return chan;
 }
 
+Channel *ChannelManager::getOrCreateChan(const std::string &name, std::string pass)
+{
+    std::map<std::string, Channel*>::iterator it = _channels.find(name);
+    if (it != _channels.end()){
+        if (it->second->getPass() != pass)
+            return NULL;
+        return it->second;
+    }
+    Channel *chan = new Channel(name, pass);
+    _channels[name] = chan;
+    return chan;
+}
+
 Channel *ChannelManager::find(const std::string &name)
 {
     std::map<std::string, Channel*>::iterator it;
