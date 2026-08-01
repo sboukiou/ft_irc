@@ -90,6 +90,8 @@ void Command::_setCommandType(void) {
 		_type = WHOIS;
 	else if (_name == "HELP")
 		_type = HELP;
+	else if (_name == "CLEAR")
+		_type = CLEAR;
 	else {
 		WARN("NO type was found");
 		_type = NONE;

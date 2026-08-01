@@ -22,6 +22,7 @@ enum commandType {
 	WHO,
 	WHOIS,
 	HELP,
+	CLEAR,
 	NONE
 };
 

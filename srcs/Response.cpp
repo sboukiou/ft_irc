@@ -19,8 +19,8 @@ std::string Response::getBuffer(void) const { return (_buffer); }
 void	Response::_helpCmd() {
 	_buffer.clear();
 	_buffer += YEL;
-	_buffer += "Man Page of ircserv:\nUsage: <COMMAND> <ARGS>\nAvailable Commands:\n";
-	_buffer += "HELP: Shows this help menu\nNICK: Sets the user nickname on the server";
+	_buffer += "             [man  3 ircserv]                 \n\n* Usage: <COMMAND> <ARGS>\nAvailable Commands:\n";
+	_buffer += "* [HELP] [NICK] [UESR] [QUIT] [CLEAR]\n";
 	_buffer += RESET;
 	_buffer += "\n\r";
 }
@@ -57,7 +57,7 @@ void	Response::_quitCmd() {
 	client->setDisconnected(true);
 }
 
-void	Response::_userCmd() {
+void	Response::_userCmd(void) {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (client->getAuthenticated() == false)
