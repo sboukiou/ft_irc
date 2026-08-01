@@ -101,6 +101,19 @@ void	Response::_passCmd()
 	_buffer += "\r\n";
 }
 
+
+void	Response::_pingCmd()
+{
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	if (args.size() != 1)
+		throw(std::runtime_error("Invalid number of args for USER command!"));
+	_buffer += GREEN;
+	_buffer += "PONG ";
+	_buffer += args[0];
+	_buffer += RESET;
+	_buffer += "\r\n";
+}
 void	Response::runCmd() {
 
 	try {
@@ -114,6 +127,8 @@ void	Response::runCmd() {
 			_userCmd();
 		else if (cmd.getType() == PASS)
 			_passCmd();
+		else if (cmd.getType() == PING)
+			_pingCmd();
 		else {
 			std::cout << "Type is : " << cmd.getType() << std::endl;
 			throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
