@@ -62,8 +62,6 @@ void Command::_setCommandType(void) {
 		_type = USER;
 	else if (_name == "PING")
 		_type = PING;
-	else if (_name == "PONG")
-		_type = PONG;
 	else if (_name == "QUIT")
 		_type = QUIT;
 	else if (_name == "JOIN")

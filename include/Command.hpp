@@ -8,7 +8,6 @@ enum commandType {
 	NICK,
 	USER,
 	PING,
-	PONG,
 	QUIT,
 	JOIN,
 	PART,
