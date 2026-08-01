@@ -23,6 +23,7 @@ class Response {
 		void	_passCmd();
 		void	_pingCmd();
 		void	_clearCmd();
+		void	_broadCastCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);

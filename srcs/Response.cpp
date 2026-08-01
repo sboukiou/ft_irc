@@ -121,6 +121,15 @@ void ::Response::_clearCmd() {
 	_buffer = "\x1B[3J\x1B[2J\x1B[H";
 }
 
+void ::Response::_broadCastCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	_buffer = cmd.getName();
+	for (size_t i = 0; i < args.size(); i += 1)
+		_buffer += args[i];
+	/* TODO: Implement the Broadcasting logic  */
+}
+
 void	Response::runCmd() {
 
 	try {
@@ -138,6 +147,8 @@ void	Response::runCmd() {
 			_pingCmd();
 		else if (cmd.getType() == CLEAR)
 			_clearCmd();
+		else if (cmd.getType() == BROADCAST)
+			_broadCastCmd();
 		else {
 			std::cout << "Type is : " << cmd.getType() << std::endl;
 			throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
