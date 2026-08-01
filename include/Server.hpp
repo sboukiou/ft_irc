@@ -8,7 +8,9 @@
 #include <unistd.h>
 #include <iostream>
 #include <poll.h>
-#include "../include/Client.hpp"
+#include "Client.hpp"
+#include "ChannelManager.hpp"
+#include "Channel.hpp"
 #include <netinet/in.h>
 
 class Server
@@ -21,6 +23,7 @@ class Server
         std::vector<pollfd> pollfds;
         std::map<int, Client*> Clients;
         size_t index;
+        ChannelManager manager;
         
 
     public:

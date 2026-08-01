@@ -3,9 +3,9 @@
 #include "../include/Response.hpp"
 #include "../include/Command.hpp"
 
-Server::Server(int port, std::string password):_socket(-1), _port(port), _password(password){
+Server::Server(int port, std::string password):_socket(-1), _port(port), _password(password), manager(){
 }
-Server::Server():_socket(-1), _port(-1){
+Server::Server():_socket(-1), _port(-1), manager(){
 }
 Server::Server(const Server& other){
     *this = other;
@@ -82,7 +82,7 @@ void Server::removeClient(Client *client)
             pollfds.erase(it);
             break;
         }
-    }
+    }        
     delete client;
 }
 
@@ -212,7 +212,7 @@ void	Server::executeCommand(Client *client, std::string command) {
 	std::string response;
 	try {
 		Command cmd(command);
-		Response resp(cmd, client, _password);
+		Response resp(cmd, client, _password, manager, this);
 		resp.runCmd();
 		response = resp.getBuffer();
 	}
