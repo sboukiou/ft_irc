@@ -74,6 +74,8 @@ void Server::acceptClient()
 
 void Server::removeClient(Client *client)
 {
+    for (std::set<Channel*>::iterator it = client->getChannels().begin(); it != client->getChannels().end(); ++it)
+        (*it)->removeClient(client);
     Clients.erase(client->getFd());
     for (std::vector<pollfd>::iterator it = pollfds.begin(); it != pollfds.end(); it++)
     {
@@ -98,8 +100,6 @@ void Server::extractCommand(Client *client)
         executeCommand(client, client->getBuffer().substr(0, commandEnd));
         client->getBuffer().erase(0, pos + 1);
     }
-    if (client->getDisconnected())
-        removeClient(client);
 }
 
 int Server::readRequest(Client *client)
@@ -109,17 +109,19 @@ int Server::readRequest(Client *client)
     if (read < 0)
     {
         std::cerr << "Error: recv failed\n";
-        removeClient(client);
+        client->setDisconnected(true);
         return 1;
     }
     if (read == 0)
     {
         std::cerr << "Client Disconnected\n";
-        removeClient(client);
+        client->setDisconnected(true);
         return 1;
     }
     client->appendBuffer(std::string(buffer, read));
     extractCommand(client);
+    if (client->getDisconnected() == true)
+        return 1;
     return 0;
 }
 
@@ -129,18 +131,18 @@ int Server::sendResponse(Client *client)
 	send(client->getFd(), "> ", 2, 0);
     if (bytesend < 0)
     {
-        removeClient(client);
+        client->setDisconnected(true);
         return 1;
     }
     else if (bytesend == 0)
     {
         std::cerr << "Client Disconnected\n";
-        removeClient(client);
+        client->setDisconnected(true);
         return 1;
     }
     else if (client->getDisconnected())
     {
-        removeClient(client);
+        client->setDisconnected(true);
         return 1;
     }
     client->getResponse().erase(0, bytesend);
@@ -154,15 +156,14 @@ void Server::handleRequest(pollfd &info)
         index++;
         return ;
     }
+    std::map<int, Client*>::iterator it = Clients.find(info.fd);
     if (info.revents & (POLLERR | POLLHUP))
     {   
         if (info.fd == _socket)
             std::cerr << "Error: client couldn't connect\n";
-        else
-		{
-			std::map<int, Client*>::iterator it = Clients.find(info.fd);
-			if (it != Clients.end())
-				removeClient(it->second);
+        else{
+            if (it != Clients.end())
+                removeClient(it->second);
         }
         return ;
     }
@@ -174,22 +175,30 @@ void Server::handleRequest(pollfd &info)
     }
     if (info.revents & POLLIN)
     {
-        std::map<int, Client*>::iterator it = Clients.find(info.fd);
 		if (it != Clients.end())
 		{
 			if (readRequest(it->second))
+            {
+                removeClient(it->second);
 				return ;
+            }
 		}
 	}
     if (info.revents & POLLOUT)
     {
-        if (sendResponse(Clients[info.fd]))
+        if (it != Clients.end() && sendResponse(it->second))
+        {
+            removeClient(it->second);
             return ;
+        }
     }
-    if (Clients[info.fd]->getResponse().size() > 0)
-        info.events |= POLLOUT;
-    else
-        info.events &= ~POLLOUT;
+    if (it != Clients.end())
+    {
+        if (it->second->getResponse().size() > 0)
+            info.events |= POLLOUT;
+        else
+            info.events &= ~POLLOUT;
+    }
     index++;
 }
 

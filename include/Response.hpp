@@ -21,6 +21,8 @@ class Response {
 		void	_quitCmd();
 		void	_userCmd();
 		void	_passCmd();
+		void	_joinCmd();
+		void	_kickCmd();
 		void	_pingCmd();
 		void	_clearCmd();
 		void	_broadCastCmd();

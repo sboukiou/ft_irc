@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <set>
+#include "Client.hpp"
 
 class Client;
 
@@ -29,6 +30,7 @@ public:
     ~Channel();
 
     std::set<Client*>& getMembers();
+    std::set<Client*>& getOperators();
     const std::string& getName() const;
     void setInviteOnly(bool status);
     void setChannelPass(bool status);
@@ -43,6 +45,7 @@ public:
     void addClient(Client* client);
     void removeClient(Client* client);
     bool isMember(Client* client) const;
+    Client* isMemberByName(std::string name);
     bool isEmpty() const;
     size_t getMemberCount() const;
 

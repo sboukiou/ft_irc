@@ -92,8 +92,6 @@ void Command::_setCommandType(void) {
 		_type = HELP;
 	else if (_name == "CLEAR")
 		_type = CLEAR;
-	else {
-		WARN("NO type was found");
-		_type = NONE;
-	}
+	else 
+		_type = BROADCAST;
 }
