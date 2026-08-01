@@ -62,8 +62,6 @@ void Command::_setCommandType(void) {
 		_type = USER;
 	else if (_name == "PING")
 		_type = PING;
-	else if (_name == "PONG")
-		_type = PONG;
 	else if (_name == "QUIT")
 		_type = QUIT;
 	else if (_name == "JOIN")
@@ -92,6 +90,8 @@ void Command::_setCommandType(void) {
 		_type = WHOIS;
 	else if (_name == "HELP")
 		_type = HELP;
+	else if (_name == "CLEAR")
+		_type = CLEAR;
 	else {
 		WARN("NO type was found");
 		_type = NONE;

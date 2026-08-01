@@ -1,9 +1,8 @@
 #include "../include/Response.hpp"
 
-Response::Response(): _buffer(""){}
 Response::Response(Command &c, Client *cl, std::string pass, ChannelManager &manager, Server *server): _buffer(""), cmd(c), client(cl), _password(pass), manager(manager), server(server) {}
 Response::Response(const Response &other): _buffer(other._buffer),
-	cmd(other.cmd), client(other.client) {}
+	cmd(other.cmd), client(other.client), manager(other.manager) {}
 Response &Response::operator=(const Response &other) {
 	if (this != &other) {
 		cmd = other.cmd;
@@ -20,8 +19,8 @@ std::string Response::getBuffer(void) const { return (_buffer); }
 void	Response::_helpCmd() {
 	_buffer.clear();
 	_buffer += YEL;
-	_buffer += "Man Page of ircserv:\nUsage: <COMMAND> <ARGS>\nAvailable Commands:\n";
-	_buffer += "HELP: Shows this help menu\nNICK: Sets the user nickname on the server";
+	_buffer += "             [man  3 ircserv]                 \n\n* Usage: <COMMAND> <ARGS>\nAvailable Commands:\n";
+	_buffer += "* [HELP] [NICK] [UESR] [QUIT] [CLEAR]\n";
 	_buffer += RESET;
 	_buffer += "\n\r";
 }
@@ -58,7 +57,7 @@ void	Response::_quitCmd() {
 	client->setDisconnected(true);
 }
 
-void	Response::_userCmd() {
+void	Response::_userCmd(void) {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (client->getAuthenticated() == false)
@@ -91,7 +90,7 @@ void	Response::_passCmd()
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() != 1)
-		throw(std::runtime_error("Invalid number of args for USER command!"));
+		throw(std::runtime_error("Invalid number of args for password command!"));
 	if (args[0] != _password)
 		throw(std::runtime_error("Invalid password!"));
 	client->setAuthenticated(true);
@@ -99,6 +98,36 @@ void	Response::_passCmd()
 	_buffer += "Done, New client authenticated";
 	_buffer += RESET;
 	_buffer += "\r\n";
+}
+
+
+void	Response::_pingCmd()
+{
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	if (args.size() != 1)
+		throw(std::runtime_error("Invalid number of args for USER command!"));
+	_buffer += GREEN;
+	_buffer += "PONG ";
+	_buffer += args[0];
+	_buffer += RESET;
+	_buffer += "\r\n";
+}
+void ::Response::_clearCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	if (args.size() != 0)
+		throw(std::runtime_error("Invalid number of args for clear command!"));
+	_buffer.clear();
+	_buffer = "\x1B[3J\x1B[2J\x1B[H";
+}
+
+void ::Response::_broadCastCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	_buffer = cmd.getName();
+	for (size_t i = 0; i < args.size(); i += 1)
+		_buffer += args[i];
+	/* TODO: Implement the Broadcasting logic  */
 }
 
 void	Response::runCmd() {
@@ -114,6 +143,12 @@ void	Response::runCmd() {
 			_userCmd();
 		else if (cmd.getType() == PASS)
 			_passCmd();
+		else if (cmd.getType() == PING)
+			_pingCmd();
+		else if (cmd.getType() == CLEAR)
+			_clearCmd();
+		else if (cmd.getType() == BROADCAST)
+			_broadCastCmd();
 		else {
 			std::cout << "Type is : " << cmd.getType() << std::endl;
 			throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));

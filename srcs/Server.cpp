@@ -126,6 +126,7 @@ int Server::readRequest(Client *client)
 int Server::sendResponse(Client *client)
 {
     ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), client->getResponse().size(), 0); 
+	send(client->getFd(), "> ", 2, 0);
     if (bytesend < 0)
     {
         removeClient(client);
@@ -158,10 +159,10 @@ void Server::handleRequest(pollfd &info)
         if (info.fd == _socket)
             std::cerr << "Error: client couldn't connect\n";
         else
-        {
-            std::map<int, Client*>::iterator it = Clients.find(info.fd);
-            if (it != Clients.end())
-                removeClient(it->second);
+		{
+			std::map<int, Client*>::iterator it = Clients.find(info.fd);
+			if (it != Clients.end())
+				removeClient(it->second);
         }
         return ;
     }
