@@ -1,16 +1,34 @@
 #include "../include/Client.hpp"
 
-Client::Client():_fd(-1), disconnected(false) {}
+Client::Client():_fd(-1), disconnected(false) , registered(false), authenticated(false) {}
 
-Client::Client(int fd):_fd(fd), disconnected(false){}
+Client::Client(int fd):_fd(fd), disconnected(false) , registered(false), authenticated(false) {}
 
 Client::Client(const Client& other){
     *this = other;
 }
-
+void Client::setRealname(std::string rName){
+    realname = rName;
+}
+std::string Client::getRealkname(){
+    return realname;
+}
 void Client::setDisconnected(bool status)
 {
     disconnected = status;
+}
+
+void Client::setAuthenticated(bool status){
+    authenticated = status;
+}
+bool Client::getAuthenticated(){
+    return authenticated;
+}
+void Client::setRegistered(bool status){
+    registered = status;
+}
+bool Client::getRegistered(){
+    return registered;
 }
 
 bool Client::getDisconnected()
@@ -21,6 +39,25 @@ void Client::setNickname(std::string nName)
 {   
     nickname = nName;
 }
+
+void Client::appendChannels(Channel* channel){
+    if (channels.count(channel))
+        return ;
+    channels.insert(channel);
+}
+
+std::set<Channel*>& Client::getChannels(){
+    return channels;
+}
+
+void Client::setIsOperator(bool status){
+    isOperator = status;
+}
+
+bool Client::getIsOperator(){
+    return isOperator;
+}
+
 void Client::appendToResponse(std::string res)
 {
     response.append(res);

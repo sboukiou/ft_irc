@@ -3,9 +3,9 @@
 #include "../include/Response.hpp"
 #include "../include/Command.hpp"
 
-Server::Server(int port, std::string password):_socket(-1), _port(port), _password(password){
+Server::Server(int port, std::string password):_socket(-1), _port(port), _password(password), manager(){
 }
-Server::Server():_socket(-1), _port(-1){
+Server::Server():_socket(-1), _port(-1), manager(){
 }
 Server::Server(const Server& other){
     *this = other;
@@ -20,6 +20,11 @@ Server::~Server(){
     for (std::map<int, Client*>::iterator it = Clients.begin(); it != Clients.end(); it++)
         delete it->second;
     Clients.clear();
+}
+
+std::string Server::getPass()
+{
+    return _password;
 }
 
 void Server::initSocket()
@@ -77,7 +82,7 @@ void Server::removeClient(Client *client)
             pollfds.erase(it);
             break;
         }
-    }
+    }        
     delete client;
 }
 
@@ -201,14 +206,13 @@ void Server::run()
     }
 }
 
-
 void	Server::executeCommand(Client *client, std::string command) {
 	if (client == NULL)
 		throw(std::runtime_error("Client [NULL] sent the command: " + command));
 	std::string response;
 	try {
 		Command cmd(command);
-		Response resp(cmd, *client);
+		Response resp(cmd, client, _password, manager, this);
 		resp.runCmd();
 		response = resp.getBuffer();
 	}
