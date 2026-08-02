@@ -45,17 +45,12 @@ void Client::appendChannels(Channel* channel){
         return ;
     channels.insert(channel);
 }
-
+void Client::removeChannel(Channel *channel)
+{
+    channels.erase(channel);
+}
 std::set<Channel*>& Client::getChannels(){
     return channels;
-}
-
-void Client::setIsOperator(bool status){
-    isOperator = status;
-}
-
-bool Client::getIsOperator(){
-    return isOperator;
 }
 
 void Client::appendToResponse(std::string res)

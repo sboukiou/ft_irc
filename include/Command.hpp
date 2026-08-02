@@ -8,8 +8,8 @@ enum commandType {
 	NICK,
 	USER,
 	PING,
-	PONG,
 	QUIT,
+	HELP,
 	JOIN,
 	PART,
 	PRIVMSG,
@@ -22,8 +22,8 @@ enum commandType {
 	LIST,
 	WHO,
 	WHOIS,
-	HELP,
-	NONE
+	CLEAR,
+	BROADCAST
 };
 
 class Command {

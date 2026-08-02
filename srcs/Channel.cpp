@@ -60,9 +60,15 @@ std::string Channel::getPass(){
     return _pass;
 }
 
+std::set<Client*>& Channel::getOperators(){
+    return _operators;
+}
+
 void Channel::removeClient(Client *client)
 {
     _members.erase(client);
+    if (isOperator(client))
+        _operators.erase(client);
 }
 
 bool Channel::isMember(Client *client) const
@@ -75,6 +81,15 @@ bool Channel::isEmpty() const
     return _members.empty();
 }
 
+Client* Channel::isMemberByName(std::string name)
+{
+    for (std::set<Client*>::iterator it = _members.begin(); it != _members.end(); it++)
+    {
+        if ((*it)->getNickname() == name)
+            return *it;
+    }
+    return NULL;
+}
 void Channel::addOperator(Client* client) 
 {
     if (isMember(client))
