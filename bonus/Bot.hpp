@@ -2,6 +2,13 @@
 #define BOT_HPP
 
 #include <iostream>
+#include <cstdlib>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <bits/stdc++.h>
+#include "../include/macros.hpp"
+#include <ctime>
 
 class Bot
 {
@@ -25,15 +32,14 @@ public:
     ~Bot();
 
     bool connectServer();
+    bool receive();
+    bool extractLine(std::string& line);
+
     void authenticate();
-    void receive();
-    void run();
     void parseMessage(const std::string &msg);
     void handlePing(const std::string &msg);
     void handlePrivmsg(const std::string &msg);
-    void handleMessage(const std::string &msg);
     void sendRaw(const std::string &raw);
-    bool extractLine(std::string& line);
     void execCmd(const std::string &target, const std::string &cmd);
 
 };

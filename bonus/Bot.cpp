@@ -33,7 +33,7 @@ bool Bot::connectServer()
         throw std::runtime_error("Error: Invalid address");
 
     if (connect(_socketFd, (sockaddr *)&botInfo, sizeof(botInfo)) < 0)
-        throw std::runtime_error("Error: connect failed");
+        throw std::runtime_error("Error: Connect failed");
 
     return true;
 }
@@ -50,7 +50,7 @@ bool Bot::extractLine(std::string& line)
     return true;
 }
 
-void Bot::receive()
+bool Bot::receive()
 {
     char buffer[1024];
     ssize_t bytes = recv(_socketFd, buffer, sizeof(buffer), 0);
@@ -59,7 +59,7 @@ void Bot::receive()
     else if (bytes == 0)
     {
         std::cout << "Server disconnected\n";
-        return ;
+        return false;
     }
     _inputBuffer.append(buffer, bytes);
     std::string line;
@@ -69,6 +69,7 @@ void Bot::receive()
         handlePing(line);
         handlePrivmsg(line);
     }
+    return true;
 }
 
 void Bot::sendRaw(const std::string &msg)
@@ -79,11 +80,14 @@ void Bot::sendRaw(const std::string &msg)
 
 void Bot::authenticate()
 {
-    sendRaw("PASS " + _pass + "\r\n");
-    sendRaw("NICK " + _nick + "\r\n");
-    sendRaw("USER " + _user + " 0 * :" + _name + "\r\n");
-}
+    std::string passLine = "PASS " + _pass + "\r\n";
+    std::string nickLine = "NICK " + _nick + "\r\n";
+    std::string userLine = "USER " + _user + " 0 * :" + _name + "\r\n";
 
+    sendRaw(passLine);
+    sendRaw(nickLine);
+    sendRaw(userLine);
+}
 
 void Bot::handlePing(const std::string &msg)
 {
@@ -104,9 +108,11 @@ void Bot::execCmd(const std::string &target, const std::string &cmd)
     else if (cmd == "!time")
     {
         std::time_t now = std::time(0);
-        sendRaw("PRIVMSG " + target + " :" + std::ctime(&now) + "\r");
+        std::string timeStr(std::ctime(&now));
+        if (!timeStr.empty() && timeStr[timeStr.size()-1] == '\n')
+            timeStr.erase(timeStr.size()-1);
+        sendRaw("PRIVMSG " + target + " :" + timeStr + "\r\n");
     }
-
 }
 
 void Bot::handlePrivmsg(const std::string &msg)
