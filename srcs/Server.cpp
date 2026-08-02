@@ -138,7 +138,7 @@ Client* Server::getClientByName(const std::string& name)
 int Server::sendResponse(Client *client)
 {
     ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), client->getResponse().size(), 0); 
-	send(client->getFd(), "> ", 2, 0);
+	send(client->getFd(), "\n> ", 3, 0);
     if (bytesend < 0)
     {
         client->setDisconnected(true);
