@@ -6,20 +6,23 @@ int main()
 {
     try
     {
-        Bot bot(3030, "127.0.0.1", "1234", "Bot", "Hisoka", "OussamaBot");
+        Bot bot(3030, "127.0.0.1", "1234",
+                "Bot", "Hisoka", "OussamaBot");
 
         if (bot.connectServer())
         {
-            std::cout << "Connected to server successfully!" << std::endl;
+            std::cout << "Connected to server successfully!\n";
 
-            // Keep the connection open for 10 seconds
-            sleep(10);
+            bot.authenticate();
+
+            while (true)
+            {
+                bot.receive();
+            }
         }
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
     }
-
-    return 0;
 }
