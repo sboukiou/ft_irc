@@ -22,6 +22,7 @@ class Client{
         std::string realname;
         std::string response;
         std::set<Channel *> channels;
+        std::set<Channel *> invitedChannels;
 
         bool disconnected;
         bool registered;
@@ -35,6 +36,9 @@ class Client{
         ~Client();
 
         void removeChannel(Channel *channel);
+        void addInvitedChannel(Channel *channel);
+        void removeInvitedChannel(Channel *channel);
+        bool isInvitedToChannel(Channel *channel);
         void appendChannels(Channel* channel);
         std::set<Channel*>& getChannels();
         void setNickname(std::string nName);
