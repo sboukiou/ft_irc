@@ -129,7 +129,7 @@ Client* Server::getClientByName(const std::string& name)
 {
     for (std::map<int, Client*>::iterator it = Clients.begin(); it != Clients.end(); ++it)
     {
-        if (it->second->getNickname() == name)
+        if (it->second->getNickName() == name)
             return it->second;
     }
     return NULL;
@@ -234,10 +234,8 @@ void	Server::executeCommand(Client *client, std::string command) {
 		Command cmd(command);
 		Response resp(cmd, client, _password, manager, this);
 		resp.runCmd();
-		response = resp.getBuffer();
 	}
 	catch (std::runtime_error &e) {
 		response = "Error: " + std::string(e.what());
 	}
-	client->appendToResponse(response);
 }

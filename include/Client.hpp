@@ -45,9 +45,9 @@ class Client{
         void setRealname(std::string rName);
         void appendToResponse(std::string res);
         void setUsername(std::string uName);
-        std::string getNickname();
-        std::string getRealkname();
-        std::string getUsername();
+        std::string getNickName();
+        std::string getRealName();
+        std::string getUserName();
         std::string& getResponse();
         void setDisconnected(bool status);
         bool getDisconnected();

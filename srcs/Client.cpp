@@ -10,7 +10,7 @@ Client::Client(const Client& other){
 void Client::setRealname(std::string rName){
     realname = rName;
 }
-std::string Client::getRealkname(){
+std::string Client::getRealName(){
     return realname;
 }
 void Client::setDisconnected(bool status)
@@ -73,11 +73,11 @@ void Client::setUsername(std::string uName)
 {
     username = uName;
 }
-std::string Client::getNickname()
+std::string Client::getNickName()
 {
     return nickname;
 }
-std::string Client::getUsername()
+std::string Client::getUserName()
 {
     return username;
 }
