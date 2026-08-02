@@ -125,6 +125,16 @@ int Server::readRequest(Client *client)
     return 0;
 }
 
+Client* Server::getClientByName(const std::string& name)
+{
+    for (std::map<int, Client*>::iterator it = Clients.begin(); it != Clients.end(); ++it)
+    {
+        if (it->second->getNickname() == name)
+            return it->second;
+    }
+    return NULL;
+}
+
 int Server::sendResponse(Client *client)
 {
     ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), client->getResponse().size(), 0); 

@@ -30,6 +30,18 @@ void Client::setRegistered(bool status){
 bool Client::getRegistered(){
     return registered;
 }
+void Client::addInvitedChannel(Channel *channel)
+{
+    invitedChannels.insert(channel);
+}
+void Client::removeInvitedChannel(Channel *channel)
+{
+    invitedChannels.erase(channel);
+}
+bool Client::isInvitedToChannel(Channel *channel)
+{
+    return invitedChannels.count(channel) > 0;
+}
 
 bool Client::getDisconnected()
 {
