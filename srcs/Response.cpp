@@ -32,16 +32,16 @@ void	Response::_nickNameCmd() {
 		throw(std::runtime_error("Client not authenticated yet!"));
 	if (args.size() != 1)
 		throw(std::runtime_error("Invalid number of args for NICK command!"));
-	client->setNickname(args[0]);
+	client->setNickName(args[0]);
 	_buffer += GREEN;
-	_buffer += "Done, New nickname is [" + client->getNickname() + "]";
+	_buffer += "Done, New nickname is [" + client->getNickName() + "]";
 	_buffer += RESET;
 	_buffer += "\r\n";
-	if (client->getUsername().size() && client->getRegistered() == false)
+	if (client->getUserName().size() && client->getRegistered() == false)
 	{
 		client->setRegistered(true);
 		_buffer += YEL;
-		_buffer += "User: [" + client->getUsername() + "] registered successfully";
+		_buffer += "User: [" + client->getUserName() + "] registered successfully";
 		_buffer += RESET;
 		_buffer += "\r\n";
 	}
@@ -66,7 +66,7 @@ void	Response::_userCmd(void) {
 		throw(std::runtime_error("Invalid number of args for USER command!"));
 	if (args[3][0] != ':')
 		throw(std::runtime_error("Invalid realname-> [:realname]"));
-	client->setUsername(args[0]);
+	client->setUserName(args[0]);
 	std::string realName = args[3];
 	realName.erase(0, 1);
 	if (realName.size() == 0 && args.size() == 4)
@@ -76,17 +76,17 @@ void	Response::_userCmd(void) {
 	for (size_t i = 4; i < args.size(); i++)
 		realName += args[i] + " ";
 	realName.erase(realName.size() - 1);
-	client->setRealname(realName);	
+	client->setRealName(realName);	
 	_buffer += GREEN;
-	_buffer += "Done, New username is [" + client->getUsername() + "]";
-	_buffer += " and realname is [" + client->getRealkname() + "]";
+	_buffer += "Done, New username is [" + client->getUserName() + "]";
+	_buffer += " and realname is [" + client->getRealName() + "]";
 	_buffer += RESET;
 	_buffer += "\r\n";
-	if (client->getNickname().size() && client->getRegistered() == false)
+	if (client->getNickName().size() && client->getRegistered() == false)
 	{
 		client->setRegistered(true);
 		_buffer += YEL;
-		_buffer += "User: [" + client->getUsername() + "] registered successfully";
+		_buffer += "User: [" + client->getUserName() + "] registered successfully";
 		_buffer += RESET;
 		_buffer += "\r\n";
 	}
@@ -180,7 +180,7 @@ void	Response::_joinCmd()
 	}	 
 	std::set<Client*> &members = channel->getMembers();
 	_buffer += GREEN;
-	_buffer += ":" + client->getNickname() + "!" + client->getUsername() + "@host JOIN #" + channelName;
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@host JOIN #" + channelName;
 	_buffer += RESET;
 	_buffer += "\r\n";
 	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
@@ -193,7 +193,7 @@ void	Response::_joinCmd()
 	{
 		std::string topic;
 		topic = GREEN;
-		topic += ":server 332 " + client->getNickname() + " #" + channelName + " :" + channel->getTopic();
+		topic += ":server 332 " + client->getNickName() + " #" + channelName + " :" + channel->getTopic();
 		topic += RESET;
 		topic += "\r\n";
 		client->appendToResponse(topic);
@@ -201,15 +201,15 @@ void	Response::_joinCmd()
 		topic.clear();
 	}
 	_buffer += GREEN;
-	_buffer += ":server 353 " + client->getNickname() + " = #" + channelName + " :";
+	_buffer += ":server 353 " + client->getNickName() + " = #" + channelName + " :";
 	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
 	{
 		if (channel->getOperators().find(*it) != channel->getOperators().end())
 			_buffer += "@";
-		_buffer += (*it)->getNickname() + " ";
+		_buffer += (*it)->getNickName() + " ";
 	}
 	_buffer += "\r\n";
-	_buffer += ":server 366 " + client->getNickname() + " #" + channelName + " :End of /NAMES list.";
+	_buffer += ":server 366 " + client->getNickName() + " #" + channelName + " :End of /NAMES list.";
 	_buffer += RESET;
 	_buffer += "\r\n";
 }
@@ -240,7 +240,7 @@ void	Response::_kickCmd()
 		_buffer += " because of " + args[2];
 	_buffer += RESET;
 	_buffer += "\r\n";
-	std::string nickname = kickedClient->getNickname();
+	std::string nickname = kickedClient->getNickName();
 	kickedClient->appendToResponse(_buffer);
 	server->sendResponse(kickedClient);
 	channel->removeClient(kickedClient);
@@ -340,11 +340,11 @@ void 	Response::_topicCmd() {
 		topic = channel->getTopic();
 		if (topic.size() == 0)
 		{
-			topic += ":server 331 " + client->getNickname() + " #" + channelName + " :No topic is set";
+			topic += ":server 331 " + client->getNickName() + " #" + channelName + " :No topic is set";
 			throw(std::runtime_error(topic));
 		}
 		_buffer += GREEN;
-		_buffer += ":server 332 " + client->getNickname() + " #" + channelName + " :" + topic;
+		_buffer += ":server 332 " + client->getNickName() + " #" + channelName + " :" + topic;
 		_buffer += RESET;
 		_buffer += "\r\n";
 		client->appendToResponse(_buffer);
@@ -359,7 +359,7 @@ void 	Response::_topicCmd() {
 	if (channel->isTopicRestricted() && !channel->isOperator(client))
 		throw(std::runtime_error("Not an operator!"));
 	_buffer += GREEN;
-	_buffer += ":" + client->getNickname() + "!" + client->getUsername() + "@localhost TOPIC #" + channelName + " :";
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@localhost TOPIC #" + channelName + " :";
 	args[1].erase(0, 1);
 	for (size_t i = 1; i < args.size(); i++){
 		topic += args[i] + " ";
