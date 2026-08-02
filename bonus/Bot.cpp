@@ -61,6 +61,7 @@ bool Bot::receive()
     {
         std::cout << "Received: " << line << std::endl;
         handlePing(line);
+        handleInvite(line);
         handlePrivmsg(line);
     }
     return true;
@@ -91,6 +92,21 @@ void Bot::handlePing(const std::string &msg)
     if (pos != 0)
         return ;
     sendRaw("PONG" + msg.substr(4) + "\r\n");
+}
+
+void Bot::handleInvite(const std::string &msg)
+{
+    size_t pos = msg.find("INVITE");
+    if (pos == std::string::npos)
+        return ;
+    size_t chanPos = msg.find("#");
+    if (chanPos == std::string::npos)
+    {
+        std::cerr << "Error: INVITE ircbot #<channel>\n";
+        return ;
+    }
+    std::string chanName = msg.substr(chanPos);
+    sendRaw("JOIN " + chanName + "\r\n");
 }
 
 void Bot::execCmd(const std::string &target, const std::string &cmd)
