@@ -68,8 +68,8 @@ void	Response::_userCmd(void) {
 	if (realName.size() < 2 || realName[0] != ':')
 		throw(std::runtime_error("Invalid realname-> [:realname]"));
 	client->setUsername(args[0]);
-	
-	client->setRealname(realName.substr(1, realName.size() - 1)); 
+	realName.erase(0, 1);
+	client->setRealname(realName); 
 	_buffer += GREEN;
 	_buffer += "Done, New username is [" + client->getUsername() + "]";
 	_buffer += " and realname is [" + client->getRealkname() + "]";
@@ -111,7 +111,7 @@ void	Response::_joinCmd()
 	std::string channelName = args[0];
 	if (channelName.size() < 2 || channelName[0] != '#')
 		throw(std::runtime_error("Invalid channel name [# at the start]!"));
-	channelName = channelName.substr(1, channelName.size() - 1);
+	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
 	{
@@ -207,7 +207,7 @@ void	Response::_kickCmd()
 	std::string channelName = args[0];
 	if (channelName.size() < 2 || channelName[0] != '#')
 		throw(std::runtime_error("Invalid channel name [# at the start]!"));
-	channelName = channelName.substr(1, channelName.size() - 1);
+	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
 		throw(std::runtime_error("There is no channel with this name!"));
@@ -282,7 +282,7 @@ void 	Response::_inviteCmd() {
 	std::string channelName = args[1];
 	if (channelName.size() < 2 || channelName[0] != '#')
 		throw(std::runtime_error("Invalid channel name [# at the start]!"));
-	channelName = channelName.substr(1, channelName.size() - 1);
+	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
 		throw(std::runtime_error("There is no channel with this name!"));
@@ -312,7 +312,7 @@ void 	Response::_topicCmd() {
 	std::string channelName = args[0];
 	if (channelName.size() < 2 || channelName[0] != '#')
 		throw(std::runtime_error("Invalid channel name [# at the start]!"));
-	channelName = channelName.substr(1, channelName.size() - 1);
+	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
 		throw(std::runtime_error("There is no channel with this name!"));
@@ -332,6 +332,10 @@ void 	Response::_topicCmd() {
 	}
 	if (args[1].size() < 2 || args[1][0] != ':')
 		throw(std::runtime_error("Invalid start of topic, need to start with `:`!"));
+	if (!channel->isMember(client))
+		throw(std::runtime_error("Not a member!"));
+	if (channel->isTopicRestricted() && !channel->isOperator(client))
+		throw(std::runtime_error("Not an operator!"));
 	_buffer += GREEN;
 	_buffer += "Topic for channel #" + channelName + " changed to: ";
 	for (size_t i = 1; i < args.size(); i++)
@@ -340,10 +344,15 @@ void 	Response::_topicCmd() {
 		if (i != args.size() - 1)
 			_buffer += " ";
 	}
+	_buffer.pop_back();
 	_buffer += RESET;
 	_buffer += "\r\n";
-	client->appendToResponse(_buffer);
-	server->sendResponse(client);
+	std::set<Client*> &members = channel->getMembers();
+	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
+	{
+		(*it)->appendToResponse(_buffer);
+		server->sendResponse(*it);
+	}
 	channel->setTopic(_buffer);
 	_buffer.clear();
 }
