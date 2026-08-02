@@ -1,10 +1,4 @@
 #include "Bot.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <bits/stdc++.h>
-#include "../include/macros.hpp"
-#include <ctime>
 
 Bot::Bot() {}
 
@@ -104,7 +98,7 @@ void Bot::execCmd(const std::string &target, const std::string &cmd)
     if (cmd == "!ping")
         sendRaw("PRIVMSG " + target + " :pong\r\n");
     else if (cmd == "!help")
-        sendRaw("PRIVMSG " + target + " :Available commands: !help, !ping, !time, !dice\r\n");
+        sendRaw("PRIVMSG " + target + " :Available commands: !help, !ping, !time\r\n");
     else if (cmd == "!time")
     {
         std::time_t now = std::time(0);
@@ -133,7 +127,7 @@ void Bot::handlePrivmsg(const std::string &msg)
     size_t chanStart = pos + 8;
     size_t chanEnd = msg.find(' ', chanStart);
     std::string target = msg.substr(chanStart, chanEnd - chanStart);
-    if (target[0] != '#')
+    if (target.empty() || target[0] != '#')
         target = sender;
 
     execCmd(target, messageCmd);
