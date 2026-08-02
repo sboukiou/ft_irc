@@ -14,6 +14,7 @@ private:
     std::string _nick;
     std::string _user;
     std::string _name;
+    std::string _inputBuffer;
 
 
 public:
@@ -28,7 +29,12 @@ public:
     void receive();
     void run();
     void parseMessage(const std::string &msg);
+    void handlePing(const std::string &msg);
+    void handlePrivmsg(const std::string &msg);
+    void handleMessage(const std::string &msg);
     void sendRaw(const std::string &raw);
+    bool extractLine(std::string& line);
+    void execCmd(const std::string &target, const std::string &cmd);
 
 };
 
