@@ -1,13 +1,18 @@
 #include "Bot.hpp"
-#include <iostream>
-#include <unistd.h> // sleep()
 
-int main()
+int main(int ac, char **av)
 {
+    if (ac != 3)
+    {
+        std::cerr << "Usage: " << av[0] << " <port> <password>\n";
+        return 1;
+    }
     try
     {
-        Bot bot(3030, "127.0.0.1", "1234",
-                "Bot", "Hisoka", "OussamaBot");
+        int port = std::atoi(av[1]);
+        std::string pass = av[2];
+        Bot bot(port, "127.0.0.1", pass,
+                "ircbot", "ircbot", "Simplebot");
 
         if (bot.connectServer())
         {
@@ -15,14 +20,14 @@ int main()
 
             bot.authenticate();
 
-            while (true)
-            {
-                bot.receive();
-            }
+            while (bot.receive())
+                ;
+            
         }
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
     }
+
 }
