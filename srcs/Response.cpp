@@ -344,7 +344,6 @@ void 	Response::_topicCmd() {
 		if (i != args.size() - 1)
 			_buffer += " ";
 	}
-	_buffer.pop_back();
 	_buffer += RESET;
 	_buffer += "\r\n";
 	std::set<Client*> &members = channel->getMembers();
