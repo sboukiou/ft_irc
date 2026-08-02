@@ -128,7 +128,7 @@ Client* Server::getClientByName(const std::string& name)
 {
     for (std::map<int, Client*>::iterator it = Clients.begin(); it != Clients.end(); ++it)
     {
-        if (it->second->getNickname() == name)
+        if (it->second->getNickName() == name)
             return it->second;
     }
     return NULL;

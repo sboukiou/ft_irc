@@ -7,10 +7,10 @@ Client::Client(int fd):_fd(fd), disconnected(false) , registered(false), authent
 Client::Client(const Client& other){
     *this = other;
 }
-void Client::setRealname(std::string rName){
+void Client::setRealName(std::string rName){
     realname = rName;
 }
-std::string Client::getRealkname(){
+std::string Client::getRealName(){
     return realname;
 }
 void Client::setDisconnected(bool status)
@@ -47,7 +47,7 @@ bool Client::getDisconnected()
 {
     return disconnected;
 }
-void Client::setNickname(std::string nName)
+void Client::setNickName(std::string nName)
 {   
     nickname = nName;
 }
@@ -69,15 +69,15 @@ void Client::appendToResponse(std::string res)
 {
     response.append(res);
 }
-void Client::setUsername(std::string uName)
+void Client::setUserName(std::string uName)
 {
     username = uName;
 }
-std::string Client::getNickname()
+std::string Client::getNickName()
 {
     return nickname;
 }
-std::string Client::getUsername()
+std::string Client::getUserName()
 {
     return username;
 }
