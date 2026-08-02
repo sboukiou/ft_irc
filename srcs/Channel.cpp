@@ -85,7 +85,7 @@ Client* Channel::isMemberByName(std::string name)
 {
     for (std::set<Client*>::iterator it = _members.begin(); it != _members.end(); it++)
     {
-        if ((*it)->getNickname() == name)
+        if ((*it)->getNickName() == name)
             return *it;
     }
     return NULL;
