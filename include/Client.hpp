@@ -41,10 +41,10 @@ class Client{
         bool isInvitedToChannel(Channel *channel);
         void appendChannels(Channel* channel);
         std::set<Channel*>& getChannels();
-        void setNickname(std::string nName);
-        void setRealname(std::string rName);
+        void setNickName(std::string nName);
+        void setRealName(std::string rName);
         void appendToResponse(std::string res);
-        void setUsername(std::string uName);
+        void setUserName(std::string uName);
         std::string getNickName();
         std::string getRealName();
         std::string getUserName();

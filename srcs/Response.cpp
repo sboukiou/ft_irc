@@ -33,7 +33,7 @@ void	Response::_nickNameCmd() {
 		throw(std::runtime_error("Client not authenticated yet!"));
 	if (args.size() != 1)
 		throw(std::runtime_error("Invalid number of args for NICK command!"));
-	client->setNickname(args[0]);
+	client->setNickName(args[0]);
 	_buffer += GREEN;
 	_buffer += "Done, New nickname is [" + client->getNickName() + "]";
 	_buffer += RESET;
@@ -69,7 +69,7 @@ void	Response::_userCmd(void) {
 		throw(std::runtime_error("Invalid number of args for USER command!"));
 	if (args[3][0] != ':')
 		throw(std::runtime_error("Invalid realname-> [:realname]"));
-	client->setUsername(args[0]);
+	client->setUserName(args[0]);
 	std::string realName = args[3];
 	realName.erase(0, 1);
 	if (realName.size() == 0 && args.size() == 4)
@@ -79,7 +79,7 @@ void	Response::_userCmd(void) {
 	for (size_t i = 4; i < args.size(); i++)
 		realName += args[i] + " ";
 	realName.erase(realName.size() - 1);
-	client->setRealname(realName);	
+	client->setRealName(realName);	
 	_buffer += GREEN;
 	_buffer += "Done, New username is [" + client->getUserName() + "]";
 	_buffer += " and realname is [" + client->getRealName() + "]";
