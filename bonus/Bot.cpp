@@ -125,7 +125,7 @@ void Bot::execCmd(const std::string &target, const std::string &cmd)
         sendRaw("PRIVMSG " + target + " :" + timeStr + "\r\n");
     }
     else 
-        std::cerr << "PRIVMSG " << target << " :Unknown command. Type !help\n"
+        std::cerr << "PRIVMSG " << target << " :Unknown command. Type !help\n";
 }
 
 void Bot::handlePrivmsg(const std::string &msg)
