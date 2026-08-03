@@ -7,6 +7,8 @@
 # define BLUE    "\x1b[34m"
 # define RESET   "\x1b[0m"
 
+# define SERVER_NAME "penguin"
+
 #include <string>
 #include <vector>
 #include <iostream>
