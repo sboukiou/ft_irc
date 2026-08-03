@@ -456,6 +456,23 @@ void	Response::_privMsgCmd() {
 	}
 }
 
+void	Response::_listCmd() {
+	std::set<Channel *> channels = client->getChannels();
+	for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+		_buffer.clear();
+		_buffer  += ":localhost 322 ";
+		_buffer += client->getNickName();
+		_buffer += " " + (*it)->getName() + " ";
+		std::stringstream stream;
+		stream << (*it)->getNMembers();
+		_buffer +=  stream.str();
+		_buffer += ": " + (*it)->getTopic();
+		_buffer += "\r\n";
+		client->appendToResponse(_buffer);
+		server->sendResponse(client);
+	}
+}
+
 void	Response::runCmd() {
 
 	if (cmd.getType() == HELP)
@@ -484,6 +501,8 @@ void	Response::runCmd() {
 		_topicCmd();
 	else if (cmd.getType() == PRIVMSG)
 		_privMsgCmd();
+	else if (cmd.getType() == LIST)
+		_listCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));

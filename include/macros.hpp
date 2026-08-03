@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <algorithm>
+#include <sstream>
 
 # define LOG(X) std::cout << BLUE << X << RESET << std::endl;
 # define WARN(X) std::cout << YEL << X << RESET << std::endl;
