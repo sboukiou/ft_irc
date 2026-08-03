@@ -35,10 +35,8 @@ public:
     bool receive();
     bool extractLine(std::string& line);
     void authenticate();
-    void parseMessage(const std::string &msg);
     void handlePing(const std::string &msg);
     void handlePrivmsg(const std::string &msg);
-    void handleInvite(const std::string &msg);
     void sendRaw(const std::string &raw);
     void execCmd(const std::string &target, const std::string &cmd);
 
