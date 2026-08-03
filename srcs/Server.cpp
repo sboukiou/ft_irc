@@ -27,6 +27,10 @@ std::string Server::getPass()
     return _password;
 }
 
+const std::map<int, Client *> &Server::getClients() const {
+	return (Clients);
+}
+
 void Server::initSocket()
 {
     _socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -137,7 +141,7 @@ Client* Server::getClientByName(const std::string& name)
 int Server::sendResponse(Client *client)
 {
     ssize_t bytesend = send(client->getFd(), client->getResponse().c_str(), client->getResponse().size(), 0); 
-	send(client->getFd(), "> ", 2, 0);
+	send(client->getFd(), "\n> ", 3, 0);
     if (bytesend < 0)
     {
         client->setDisconnected(true);
@@ -231,10 +235,9 @@ void	Server::executeCommand(Client *client, std::string command) {
 		Command cmd(command);
 		Response resp(cmd, client, _password, manager, this);
 		resp.runCmd();
-		response = resp.getBuffer();
 	}
 	catch (std::runtime_error &e) {
 		response = "Error: " + std::string(e.what());
+		client->appendToResponse(response);
 	}
-	client->appendToResponse(response);
 }

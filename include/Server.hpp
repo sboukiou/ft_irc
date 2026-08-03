@@ -39,6 +39,7 @@ class Server
         std::string getPass();
         void acceptClient();
         Client* getClientByName(const std::string& name);
+		const std::map<int, Client *> &getClients() const;
         void extractCommand(Client *client);
         void executeCommand(Client *client, std::string command);
         void removeClient(Client *client);

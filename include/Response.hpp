@@ -30,6 +30,9 @@ class Response {
 		void 	_inviteCmd();
 		void	_topicCmd();
 		void	_modeCmd();
+		void	_privMsgCmd();
+		void	_listCmd();
+		void	_whoCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
