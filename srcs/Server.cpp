@@ -27,6 +27,10 @@ std::string Server::getPass()
     return _password;
 }
 
+const std::map<int, Client *> &Server::getClients() const {
+	return (Clients);
+}
+
 void Server::initSocket()
 {
     _socket = socket(AF_INET, SOCK_STREAM, 0);
