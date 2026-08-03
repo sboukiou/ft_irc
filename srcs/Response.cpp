@@ -427,6 +427,7 @@ void	Response::_privMsgCmd() {
 					_buffer += args[i] + " ";
 				_buffer += "\r\n";
 				(*it)->appendToResponse(_buffer);
+				server->sendResponse(*it);
 			}
 		}
 
@@ -451,6 +452,7 @@ void	Response::_privMsgCmd() {
 			_buffer += args[i] + " ";
 		_buffer += "\r\n";
 		target->appendToResponse(_buffer);
+		server->sendResponse(target);
 	}
 }
 
