@@ -516,7 +516,7 @@ void Response::_modeCmd()
 	std::string mode = args[1];
 	if (mode.size() < 2 || (mode[0] != '+' && mode[0] != '-'))
 		throw(std::runtime_error("Invalid start of mode '- | +'!"));
-	if (channel->isMember(client))
+	if (channel->isMember(client) == false)
 		throw(std::runtime_error("Not a member!"));
 	if (channel->isOperator(client) == false)
 		throw(std::runtime_error("Not an operator!"));
@@ -721,6 +721,8 @@ void	Response::runCmd() {
 		_listCmd();
 	else if (cmd.getType() == WHO)
 		_whoCmd();
+	else if (cmd.getType() == MODE)
+		_modeCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
