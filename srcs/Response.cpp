@@ -152,7 +152,7 @@ void	Response::_joinCmd()
 			return ;
 		}
 	}
-	else if (channel->getUserLimit() && channel->getNMembers() >= channel->getMemberCount())
+	else if (channel->getUserLimit() && channel->getMaxMembers() >= channel->getMemberCount())
 	{
 		_buffer += RED ;
 		_buffer += "this Channel is full\r\n";
@@ -379,6 +379,159 @@ void 	Response::_topicCmd() {
 	_buffer.clear();
 }
 
+void removeDupChars(std::string &s)
+{
+    std::set<char> target;
+	target.insert('i');
+	target.insert('t');
+    std::set<char> seen;
+    std::string result;
+
+    for (size_t idx = 0; idx < s.size(); idx++)
+    {
+        if (target.count(s[idx])){
+            if (!seen.count(s[idx])){
+                result += s[idx];
+                seen.insert(s[idx]);
+            }
+        }
+        else
+            result += s[idx]; 
+    }
+    s = result;
+}
+
+void Response::_modeCmd()
+{
+	if (client->getRegistered() == false)
+		throw(std::runtime_error("Client not registred yet!"));
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	if (args.size() < 2)
+		throw(std::runtime_error("Invalid number of args for topic command!"));
+	std::string channelName = args[0];
+	if (channelName.size() < 2 || channelName[0] != '#')
+		throw(std::runtime_error("Invalid channel name [# at the start]!"));
+	channelName.erase(0, 1);
+	Channel *channel = manager.find(channelName);
+	if (channel == NULL)
+		throw(std::runtime_error("There is no channel with this name!"));
+	std::string mode = args[1];
+	if (mode.size() < 2 || (mode[0] != '+' && mode[0] != '-'))
+		throw(std::runtime_error("Invalid start of mode '- | +'!"));
+	if (channel->isMember(client))
+		throw(std::runtime_error("Not a member!"));
+	if (channel->isOperator(client) == false)
+		throw(std::runtime_error("Not an operator!"));
+	removeDupChars(mode);
+	char op = mode[0];
+	size_t argIndex = 2;
+	int notE = 0;
+	for (size_t i = 1; i < mode.size(); i++)
+	{
+		if (mode[i] == 'i')
+			channel->setInviteOnly((op == '+') ? true : false);
+		else if (mode[i] == 't')
+			channel->setTopicRestricted((op == '+') ? true : false);
+		else if (mode[i] == 'l'){
+			if (op == '+'){
+				if (argIndex >= args.size()){
+					notE = 1;
+					break;
+				}
+				char *endptr;
+				double value = strtod(args[argIndex].c_str(), &endptr);
+				errno = 0;
+				if (errno == ERANGE || *endptr || value < 1 || value > 2147483647){
+					_buffer.clear();
+					_buffer += RED;
+					_buffer += ":server NOTICE <" + client->getNickName() + "> Invalid channel limit";
+					_buffer += RESET;
+					_buffer += "\r\n";
+				}
+				else{
+					channel->setUserLimit(true);
+					channel->setMaxMembers((int)value);
+				}
+				argIndex++;
+			}
+			else
+				channel->setUserLimit(false);
+		}
+		else if (mode[i] == 'k'){
+			if (argIndex >= args.size()){
+					notE = 1;
+					break;
+				}
+			if (op == '+'){
+				channel->setPass(args[argIndex]);
+				channel->setChannelPass(true);
+			}
+			else{
+				if (channel->getPass() != args[argIndex]){
+					_buffer.clear();
+					_buffer += RED;
+					_buffer += ":server NOTICE <" + client->getNickName() + "> incorrect password";
+					_buffer += RESET;
+					_buffer += "\r\n";
+				}
+				channel->setChannelPass(false);				
+			}
+			argIndex++;
+		}
+		else if (mode[i] == 'o'){
+			if (argIndex >= args.size()){
+				notE = 1;
+				break;
+			}
+			Client* addedOp = server->getClientByName(args[argIndex]);
+			if (addedOp == NULL){
+				_buffer.clear();
+				_buffer += RED;
+				_buffer += ":server NOTICE <" + client->getNickName() + "> there no client with this name: " + args[argIndex];
+				_buffer += RESET;
+				_buffer += "\r\n";
+			}
+			else if (channel->isMemberByName(args[argIndex]) == NULL){
+				_buffer.clear();
+				_buffer += RED;
+				_buffer += ":server NOTICE <" + client->getNickName() + "> this client: " + args[argIndex] + " is not a member";
+				_buffer += RESET;
+				_buffer += "\r\n";
+			}
+			if (op == '+'){
+				if (channel->isOperator(addedOp) == false)
+					channel->addOperator(addedOp);
+			}
+			else{
+				if (channel->isOperator(addedOp))
+					channel->removeOperator(addedOp);
+			}
+			argIndex++;
+		}
+		else{
+			_buffer.clear();
+			_buffer += RED;
+			_buffer += ":server 472 <" + client->getNickName() + "> <" + mode[i] + "> :is unknown mode char to me";
+			_buffer += RESET;
+			_buffer += "\r\n"; 
+		}
+		if (_buffer.size() > 0){
+			server->sendResponse(client);
+			_buffer.clear();
+		}
+	}
+	_buffer.clear();
+	if (notE){
+		_buffer += RED;
+		_buffer += ":server 461 <" + client->getNickName() + "> MODE :Not enough parameters";
+		_buffer += RESET;
+		_buffer += "\r\n";
+		server->sendResponse(client);
+		_buffer.clear();
+	}
+}
+
 void	Response::runCmd() {
 
 	try {
@@ -406,6 +559,8 @@ void	Response::runCmd() {
 			_inviteCmd();
 		else if (cmd.getType() == TOPIC)
 			_topicCmd();
+		else if (cmd.getType() == MODE)
+			_modeCmd();
 		else {
 			std::cout << "Type is : " << cmd.getType() << std::endl;
 			throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));

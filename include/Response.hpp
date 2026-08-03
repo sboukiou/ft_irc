@@ -3,6 +3,7 @@
 
 #include "./macros.hpp"
 #include "./Command.hpp"
+#include <errno.h>
 #include "Client.hpp"
 #include "ChannelManager.hpp"
 #include "Server.hpp"
@@ -28,6 +29,7 @@ class Response {
 		void	_broadCastCmd();
 		void 	_inviteCmd();
 		void	_topicCmd();
+		void	_modeCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
