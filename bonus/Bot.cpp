@@ -14,6 +14,7 @@ _nick(other._nick), _user(other._user), _name(other._name){}
 
 Bot::~Bot() {}
 
+
 bool Bot::connectServer()
 {
     _socketFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -147,4 +148,14 @@ void Bot::handlePrivmsg(const std::string &msg)
         target = sender;
 
     execCmd(target, messageCmd);
+}
+
+bool digits(const std::string &port)
+{
+    for (int i = 0; port[i]; i++)
+    {
+        if (!isdigit(port[i]))
+            return false;
+    }
+    return true;
 }

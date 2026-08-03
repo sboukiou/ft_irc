@@ -34,7 +34,6 @@ public:
     bool connectServer();
     bool receive();
     bool extractLine(std::string& line);
-
     void authenticate();
     void parseMessage(const std::string &msg);
     void handlePing(const std::string &msg);
@@ -44,5 +43,7 @@ public:
     void execCmd(const std::string &target, const std::string &cmd);
 
 };
+
+bool digits(const std::string &port);
 
 #endif
