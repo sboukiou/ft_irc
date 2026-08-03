@@ -479,8 +479,6 @@ void	Response::_whoCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	if (args.size() > 2)
 		throw("Too many arguments, max is 2!");
-	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client is not registered !"));
 	_buffer.clear();
 	if (args.size() == 0) {
 		std::map<int, Client *> clients = server->getClients();
@@ -535,6 +533,46 @@ void	Response::_whoCmd() {
 
 }
 
+void	Response::_namesCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+
+	_buffer.clear();
+	_buffer += ":";
+	_buffer += SERVER_NAME;
+	_buffer += " 353 " + (client->getRegistered() ? client->getNickName(): "*");
+	_buffer += " = ";
+	if (args.size() == 1) {
+		std::set<Channel *> channels = client->getChannels();
+		for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+			std::set<Client *> members = (*it)->getMembers();
+			_buffer += (*it)->getName() + ": ";
+			for (std::set<Client *>::iterator mem = members.begin(); mem != members.end(); mem++) {
+				if ((*it)->isOperator(*mem) == true)
+					_buffer += "@";
+				if (_buffer.find((*mem)->getNickName()) != std::string::npos)
+					_buffer += (*mem)->getNickName() + " ";
+			}
+		}
+	}
+	else {
+		for (size_t i  = 0; i < args.size(); i += 1) {
+		    args[i].erase(std::remove(args[i].begin(), args[i].end(), '#'), args[i].end());
+			Channel *chan = manager.getOrCreateChan(args[i]);
+			_buffer += chan->getName() + ": ";
+			std::set<Client *> members = chan->getMembers();
+			for (std::set<Client *>::iterator mem = members.begin(); mem != members.end(); mem++) {
+				if (chan->isOperator(*mem) == true)
+					_buffer += "@";
+				if (_buffer.find((*mem)->getNickName()) != std::string::npos)
+					_buffer += (*mem)->getNickName() + " ";
+			}
+		}
+	}
+	_buffer += "\r\n";
+	client->appendToResponse(_buffer);
+	server->sendResponse(client);
+}
+
 void	Response::runCmd() {
 
 	if (cmd.getType() == HELP)
@@ -567,6 +605,8 @@ void	Response::runCmd() {
 		_whoCmd();
 	else if (cmd.getType() == UNKNOWN)
 		_unknownCmd();
+	else if (cmd.getType() == NAMES)
+		_namesCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
