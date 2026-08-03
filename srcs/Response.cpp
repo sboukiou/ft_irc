@@ -479,6 +479,8 @@ void	Response::_whoCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	if (args.size() > 2)
 		throw("Too many arguments, max is 2!");
+	if (client->getRegistered() == false)
+		throw(std::runtime_error("Client is not registered !"));
 	_buffer.clear();
 	if (args.size() == 0) {
 		std::map<int, Client *> clients = server->getClients();
