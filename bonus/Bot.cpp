@@ -60,9 +60,7 @@ bool Bot::receive()
     std::string line;
     while (extractLine(line))
     {
-        std::cout << "Received: " << line << std::endl;
         handlePing(line);
-        handleInvite(line);
         handlePrivmsg(line);
     }
     return true;
@@ -95,21 +93,6 @@ void Bot::handlePing(const std::string &msg)
     sendRaw("PONG" + msg.substr(4) + "\r\n");
 }
 
-void Bot::handleInvite(const std::string &msg)
-{
-    size_t pos = msg.find("INVITE");
-    if (pos == std::string::npos)
-        return ;
-    size_t chanPos = msg.find("#");
-    if (chanPos == std::string::npos)
-    {
-        std::cerr << "Error: INVITE ircbot #<channel>\n";
-        return ;
-    }
-    std::string chanName = msg.substr(chanPos);
-    sendRaw("JOIN " + chanName + "\r\n");
-}
-
 void Bot::execCmd(const std::string &target, const std::string &cmd)
 {
     if (cmd == "!ping")
@@ -125,7 +108,7 @@ void Bot::execCmd(const std::string &target, const std::string &cmd)
         sendRaw("PRIVMSG " + target + " :" + timeStr + "\r\n");
     }
     else 
-        std::cerr << "PRIVMSG " << target << " :Unknown command. Type !help\n";
+        sendRaw("PRIVMSG " + target + " :Unknown command. Type !help\r\n");
 }
 
 void Bot::handlePrivmsg(const std::string &msg)
@@ -142,13 +125,13 @@ void Bot::handlePrivmsg(const std::string &msg)
     std::string sender = msg.substr(start + 1, end - start -1);
     size_t secondColon = msg.rfind(":");
     std::string messageCmd = msg.substr(secondColon + 1);
-
+    size_t posSpace = messageCmd.find(" ");
+    messageCmd = messageCmd.erase(posSpace);
     size_t chanStart = pos + 8;
     size_t chanEnd = msg.find(' ', chanStart);
     std::string target = msg.substr(chanStart, chanEnd - chanStart);
     if (target.empty() || target[0] != '#')
         target = sender;
-
     execCmd(target, messageCmd);
 }
 
