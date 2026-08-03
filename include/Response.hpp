@@ -25,7 +25,7 @@ class Response {
 		void	_kickCmd();
 		void	_pingCmd();
 		void	_clearCmd();
-		void	_broadCastCmd();
+		void	_unknownCmd();
 		void 	_inviteCmd();
 		void	_topicCmd();
 		void	_privMsgCmd();

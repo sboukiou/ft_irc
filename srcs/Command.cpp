@@ -93,5 +93,5 @@ void Command::_setCommandType(void) {
 	else if (_name == "CLEAR")
 		_type = CLEAR;
 	else 
-		_type = BROADCAST;
+		_type = UNKNOWN;
 }

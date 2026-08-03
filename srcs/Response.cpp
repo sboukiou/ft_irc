@@ -299,14 +299,14 @@ void ::Response::_clearCmd() {
 	client->appendToResponse(_buffer);
 }
 
-void ::Response::_broadCastCmd() {
+void ::Response::_unknownCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
-	_buffer = cmd.getName();
-	for (size_t i = 0; i < args.size(); i += 1)
-		_buffer += args[i];
-	/* TODO: Implement the Broadcasting logic  */
+	_buffer = SERVER_NAME;
+	_buffer += " 421 " + client->getNickName() + " " + cmd.getName();
+	_buffer += " :Unknown command\r\n";
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 
 void 	Response::_inviteCmd() {
@@ -555,8 +555,6 @@ void	Response::runCmd() {
 		_pingCmd();
 	else if (cmd.getType() == CLEAR)
 		_clearCmd();
-	else if (cmd.getType() == BROADCAST)
-		_broadCastCmd();
 	else if (cmd.getType() == INVITE)
 		_inviteCmd();
 	else if (cmd.getType() == TOPIC)
@@ -567,6 +565,8 @@ void	Response::runCmd() {
 		_listCmd();
 	else if (cmd.getType() == WHO)
 		_whoCmd();
+	else if (cmd.getType() == UNKNOWN)
+		_unknownCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));

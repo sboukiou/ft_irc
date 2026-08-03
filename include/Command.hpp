@@ -23,7 +23,7 @@ enum commandType {
 	WHO,
 	WHOIS,
 	CLEAR,
-	BROADCAST
+	UNKNOWN
 };
 
 class Command {
