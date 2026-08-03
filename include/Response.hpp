@@ -28,6 +28,8 @@ class Response {
 		void	_broadCastCmd();
 		void 	_inviteCmd();
 		void	_topicCmd();
+		void	_privMsgCmd();
+		void	_listCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
