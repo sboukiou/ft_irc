@@ -378,7 +378,7 @@ void 	Response::_topicCmd() {
 	if (channel->isTopicRestricted() && !channel->isOperator(client))
 		throw(std::runtime_error("Not an operator!"));
 	_buffer += GREEN;
-	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@localhost TOPIC #" + channelName + " :";
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + "TOPIC #" + channelName + " :";
 	args[1].erase(0, 1);
 	for (size_t i = 1; i < args.size(); i++){
 		topic += args[i] + " ";
@@ -415,14 +415,13 @@ void	Response::_privMsgCmd() {
 			throw(std::runtime_error("you are not a member in the target channel"));
 		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 			if (*it != client) {
-				_buffer = client->getNickName();
-				_buffer += "!";
+				_buffer = ":" + client->getNickName() + "!";
 				_buffer += client->getUserName();
 				_buffer += "@";
-				_buffer += client->getRealName();
-				_buffer += "PRIVMSG ";
+				_buffer += SERVER_NAME;
+				_buffer += " PRIVMSG ";
 				_buffer += target->getName();
-				_buffer += " :";
+				_buffer += " ";
 				for (size_t i  = 1; i < args.size(); i += 1)
 					_buffer += args[i] + " ";
 				_buffer += "\r\n";
@@ -440,14 +439,13 @@ void	Response::_privMsgCmd() {
 		else
 		LOG("Client found!");
 		_buffer.clear();
-		_buffer = client->getNickName();
-		_buffer += "!";
+		_buffer = ":" + client->getNickName() + "!";
 		_buffer += client->getUserName();
-		_buffer += "@[";
-		_buffer += client->getRealName();
-		_buffer += "]  PRIVMSG ";
+		_buffer += "@";
+		_buffer += SERVER_NAME;
+		_buffer += "PRIVMSG ";
 		_buffer += target->getNickName();
-		_buffer += " :";
+		_buffer += " ";
 		for (size_t i  = 1; i < args.size(); i += 1)
 			_buffer += args[i] + " ";
 		_buffer += "\r\n";
@@ -457,10 +455,14 @@ void	Response::_privMsgCmd() {
 }
 
 void	Response::_listCmd() {
+	if (cmd.getArgs().size() != 0)
+		throw(std::runtime_error("List command is not supposed to have any arguments!"));
 	std::set<Channel *> channels = client->getChannels();
 	for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
 		_buffer.clear();
-		_buffer  += ":localhost 322 ";
+		_buffer  += ":";
+		_buffer += SERVER_NAME;
+		_buffer += " 322 ";
 		_buffer += client->getNickName();
 		_buffer += " " + (*it)->getName() + " ";
 		std::stringstream stream;
@@ -471,6 +473,66 @@ void	Response::_listCmd() {
 		client->appendToResponse(_buffer);
 		server->sendResponse(client);
 	}
+}
+
+void	Response::_whoCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	if (args.size() > 2)
+		throw("Too many arguments, max is 2!");
+	if (client->getRegistered() == false)
+		throw(std::runtime_error("Client is not registered !"));
+	_buffer.clear();
+	if (args.size() == 0) {
+		std::map<int, Client *> clients = server->getClients();
+		for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+		{
+			_buffer += ":IRC98 352 " + client->getNickName() + " ";
+			_buffer += (it->second->getRegistered() ? it->second->getUserName() : "*") + " ";
+			_buffer +=  SERVER_NAME;
+			_buffer += " IRC98 " + it->second->getNickName() + " H@ :0 ";
+			_buffer += it->second->getRealName();
+			_buffer += "\r\n";
+		}
+			client->appendToResponse(_buffer);
+			server->sendResponse(client);
+	}
+	else if (args.size() == 1 && args[0][0] == '#') {
+		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
+		Channel *target = manager.getOrCreateChan(args[0]);
+		if (target == NULL)
+			throw(std::runtime_error("Target channel doesn't exists !"));
+		std::set<Client *> clients;
+		if (args.size() == 2 && args[0][1] != 'o')
+					throw(std::runtime_error("Invalid option !"));
+		else if (args.size() == 2 && args[0][1] == 'o')
+			clients = target->getOperators();
+		else
+			clients = target->getMembers();
+		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
+			_buffer += ":IRC98 352 " + client->getNickName() + " ";
+			_buffer += ((*it)->getRegistered() ? (*it)->getUserName() : "*") + " ";
+			_buffer += " ";
+			_buffer += SERVER_NAME;
+			_buffer += " IRC98 " + (*it)->getNickName() + " H@ :0 ";
+			_buffer += (*it)->getRealName();
+		}
+			client->appendToResponse(_buffer);
+			server->sendResponse(client);
+	}
+	else {
+			Client *target = server->getClientByName(args[0]);
+			if (target == NULL)
+				throw(std::runtime_error("target client not found"));
+			_buffer += ":IRC98 352 " + client->getNickName() + " ";
+			_buffer += (target->getRegistered() ? target->getUserName() : "*") + " ";
+			_buffer += " ";
+			_buffer += SERVER_NAME;
+			_buffer += " IRC98 " + target->getNickName() + " H@ :0 ";
+			_buffer += target->getRealName();
+			client->appendToResponse(_buffer);
+			server->sendResponse(client);
+	}
+
 }
 
 void	Response::runCmd() {
@@ -503,6 +565,8 @@ void	Response::runCmd() {
 		_privMsgCmd();
 	else if (cmd.getType() == LIST)
 		_listCmd();
+	else if (cmd.getType() == WHO)
+		_whoCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
