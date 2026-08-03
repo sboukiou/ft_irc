@@ -184,7 +184,7 @@ void Server::handleRequest(pollfd &info)
 		{
 			if (readRequest(it->second))
             {
-                std::cerr << "Client: " << it->second->getNickname() << " Disconnected\n";
+                std::cerr << "Client: " << it->second->getNickName() << " Disconnected\n";
                 removeClient(it->second);
 				return ;
             }
@@ -194,7 +194,7 @@ void Server::handleRequest(pollfd &info)
     {
         if (it != Clients.end() && sendResponse(it->second))
         {
-            std::cerr << "Client: " << it->second->getNickname() << " Disconnected\n";
+            std::cerr << "Client: " << it->second->getNickName() << " Disconnected\n";
             removeClient(it->second);
             return ;
         }
