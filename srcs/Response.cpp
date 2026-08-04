@@ -13,6 +13,13 @@ Response &Response::operator=(const Response &other) {
 }
 Response::~Response() {}
 
+std::string creatBuffer(std::string numeric, std::string target, std::string message)
+{
+	std::string buffer;
+	buffer += SERVER_NAME;
+	buffer += " " + numeric + " " + target + " :" + message + "\r\n";
+	return buffer;
+}
 
 std::string Response::getBuffer(void) const { return (_buffer); }
 
@@ -30,15 +37,20 @@ void	Response::_nickNameCmd() {
 	if (client->getAuthenticated() == false)
 		throw(std::runtime_error("Client not authenticated yet!"));
 	if (args.size() != 1)
-		throw(std::runtime_error("Invalid number of args for NICK command!"));
+		throw(std::runtime_error(creatBuffer("432", "*", "Erroneous nickname")));
+	if (server->getClientByName(args[0]))
+		throw(std::runtime_error(creatBuffer("433", args[0], "Nickname is already in use")));
 	client->setNickName(args[0]);
 	_buffer += "Done, New nickname is [" + client->getNickName() + "]";
 	_buffer += "\r\n";
+	client->appendToResponse(_buffer);
+	server->sendResponse(client);
+	_buffer.clear();
 	if (client->getUserName().size() && client->getRegistered() == false)
 	{
 		client->setRegistered(true);
-		_buffer += "User: [" + client->getUserName() + "] registered successfully";
-		_buffer += "\r\n";
+		_buffer += creatBuffer("001", client->getNickName(), "Welcome to the Internet Relay Network");
+		_buffer += client->getNickName() + "!" + client->getUserName() + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
 }
@@ -375,7 +387,7 @@ void	Response::_privMsgCmd() {
 				_buffer += client->getUserName();
 				_buffer += "@";
 				_buffer += SERVER_NAME;
-				_buffer += " PRIVMSG ";
+				_buffer += " PRIVMSG #";
 				_buffer += target->getName();
 				_buffer += " ";
 				for (size_t i  = 1; i < args.size(); i += 1)
