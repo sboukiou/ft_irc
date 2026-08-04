@@ -541,17 +541,17 @@ void	Response::_namesCmd() {
 	_buffer += SERVER_NAME;
 	_buffer += " 353 " + (client->getRegistered() ? client->getNickName(): "*");
 	_buffer += " = ";
-	if (args.size() == 1) {
-		std::set<Channel *> channels = client->getChannels();
-		for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
-			std::set<Client *> members = (*it)->getMembers();
-			_buffer += (*it)->getName() + ": ";
+	if (args.size() == 0) {
+		std::map<std::string, Channel *> channels = manager.getChannels();
+		for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+			std::set<Client *> members = it->second->getMembers();
+			_buffer += "#" + it->second->getName() + " : ";
 			for (std::set<Client *>::iterator mem = members.begin(); mem != members.end(); mem++) {
-				if ((*it)->isOperator(*mem) == true)
+				if (it->second->isOperator(*mem) == true)
 					_buffer += "@";
-				if (_buffer.find((*mem)->getNickName()) != std::string::npos)
-					_buffer += (*mem)->getNickName() + " ";
+				_buffer += (*mem)->getNickName() + " ";
 			}
+			_buffer += "\n";
 		}
 	}
 	else {
@@ -563,9 +563,9 @@ void	Response::_namesCmd() {
 			for (std::set<Client *>::iterator mem = members.begin(); mem != members.end(); mem++) {
 				if (chan->isOperator(*mem) == true)
 					_buffer += "@";
-				if (_buffer.find((*mem)->getNickName()) != std::string::npos)
-					_buffer += (*mem)->getNickName() + " ";
+				_buffer += (*mem)->getNickName() + " ";
 			}
+			_buffer += "\n";
 		}
 	}
 	_buffer += "\r\n";
