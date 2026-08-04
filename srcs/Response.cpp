@@ -573,6 +573,75 @@ void	Response::_namesCmd() {
 	server->sendResponse(client);
 }
 
+
+void	Response::_broadCastToChannel(Channel *chan, std::string message, bool includeSender) {
+	if (chan == NULL)
+		throw(std::runtime_error("Channel not found!"));
+	std::set<Client *> members = chan->getMembers();
+	for (std::set<Client *>::iterator it =  members.begin(); it != members.end(); it++) {
+		if ((*it) != client || includeSender) {
+			(*it)->appendToResponse(message);
+			server->sendResponse(*it);
+		}
+	}
+}
+
+void	Response::_partCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+
+	if (client->getRegistered() == false)
+		throw(std::runtime_error(":penguin 451 * :You have not registered "));
+	if (args.size() == 0)
+		throw(std::runtime_error(":penguin 461 PART :Not enough parameters"));
+	size_t start = 0;
+	for (start = 0; start < args.size(); start += 1)
+		if (args[start][0] == ':')
+			break ;
+	if (start == 0)
+		throw(std::runtime_error(":penguin 461 :Invalid token"));
+	std::string reason;
+	for (size_t i = start; i < args.size(); i += 1)
+		reason += args[i] + " ";
+	for (size_t i = 0; i < start; i += 1) {
+		if (args[i].empty() || args[i][0] != '#') {
+			client->appendToResponse(":penguin 403 " + client->getNickName() + 
+					" " + args[i] + " :No such channel\r\n");
+			server->sendResponse(client);
+			continue ;
+		}
+		std::string name = args[i].substr(1);
+		if (name.empty()) {
+			client->appendToResponse(":penguin 403 " + client->getNickName()
+					+ " " + args[i] + " :No such channel\r\n");
+			server->sendResponse(client);
+			continue ;
+		}
+
+		Channel *chan = manager.find(name);
+		if (chan == NULL) {
+			client->appendToResponse(":penguin 403 " + client->getNickName()
+					+ " #" + name + " :No such channel\r\n");
+			server->sendResponse(client);
+			continue ;
+		}
+		if (chan->isMember(client) == false) {
+			client->appendToResponse(":penguin 442 " + client->getNickName() + " #" + name + " :You're not on that channel\r\n");
+			server->sendResponse(client);
+			continue ;
+		}
+		std::string message = ":" + client->getNickName() + "!" + client->getUserName() + "@";
+		message += SERVER_NAME;
+		message += " PART #" + chan->getName() + " ";
+		message += reason;
+		message += "\r\n";
+		_broadCastToChannel(chan, message, true);
+		chan->removeClient(client);
+		client->removeChannel(chan);
+		manager.removeIfEmpty(std::string(chan->getName()));
+	}
+
+}
+
 void	Response::runCmd() {
 
 	if (cmd.getType() == HELP)
@@ -607,6 +676,8 @@ void	Response::runCmd() {
 		_unknownCmd();
 	else if (cmd.getType() == NAMES)
 		_namesCmd();
+	else if (cmd.getType() == PART)
+		_partCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
