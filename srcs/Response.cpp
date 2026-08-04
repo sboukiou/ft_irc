@@ -406,7 +406,7 @@ void	Response::_privMsgCmd() {
 	if (args.size() < 2)
 		throw(std::runtime_error("At least two arguments are needed: <Target> and <Message>"));
 	if (args[0][0] == '#') {
-		    args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
+		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
 		Channel *target = manager.find(args[0]);
 		if (target == NULL)
 			throw(std::runtime_error("Target channel doesn't exits"));
@@ -443,7 +443,7 @@ void	Response::_privMsgCmd() {
 		_buffer += client->getUserName();
 		_buffer += "@";
 		_buffer += SERVER_NAME;
-		_buffer += "PRIVMSG ";
+		_buffer += " PRIVMSG ";
 		_buffer += target->getNickName();
 		_buffer += " ";
 		for (size_t i  = 1; i < args.size(); i += 1)
