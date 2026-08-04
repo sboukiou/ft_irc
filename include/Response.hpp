@@ -26,13 +26,14 @@ class Response {
 		void	_kickCmd();
 		void	_pingCmd();
 		void	_clearCmd();
-		void	_broadCastCmd();
+		void	_unknownCmd();
 		void 	_inviteCmd();
 		void	_topicCmd();
 		void	_modeCmd();
 		void	_privMsgCmd();
 		void	_listCmd();
 		void	_whoCmd();
+		void	_namesCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);

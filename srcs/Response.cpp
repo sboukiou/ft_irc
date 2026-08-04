@@ -297,14 +297,14 @@ void ::Response::_clearCmd() {
 	client->appendToResponse(_buffer);
 }
 
-void ::Response::_broadCastCmd() {
+void ::Response::_unknownCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
-	_buffer = cmd.getName();
-	for (size_t i = 0; i < args.size(); i += 1)
-		_buffer += args[i];
-	/* TODO: Implement the Broadcasting logic  */
+	_buffer = SERVER_NAME;
+	_buffer += " 421 " + client->getNickName() + " " + cmd.getName();
+	_buffer += " :Unknown command\r\n";
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 
 void 	Response::_inviteCmd() {
@@ -404,7 +404,7 @@ void	Response::_privMsgCmd() {
 	if (args.size() < 2)
 		throw(std::runtime_error("At least two arguments are needed: <Target> and <Message>"));
 	if (args[0][0] == '#') {
-		    args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
+		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
 		Channel *target = manager.find(args[0]);
 		if (target == NULL)
 			throw(std::runtime_error("Target channel doesn't exits"));
@@ -441,7 +441,7 @@ void	Response::_privMsgCmd() {
 		_buffer += client->getUserName();
 		_buffer += "@";
 		_buffer += SERVER_NAME;
-		_buffer += "PRIVMSG ";
+		_buffer += " PRIVMSG ";
 		_buffer += target->getNickName();
 		_buffer += " ";
 		for (size_t i  = 1; i < args.size(); i += 1)
@@ -610,8 +610,6 @@ void	Response::_whoCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	if (args.size() > 2)
 		throw("Too many arguments, max is 2!");
-	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client is not registered !"));
 	_buffer.clear();
 	if (args.size() == 0) {
 		std::map<int, Client *> clients = server->getClients();
@@ -666,6 +664,46 @@ void	Response::_whoCmd() {
 
 }
 
+void	Response::_namesCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+
+	_buffer.clear();
+	_buffer += ":";
+	_buffer += SERVER_NAME;
+	_buffer += " 353 " + (client->getRegistered() ? client->getNickName(): "*");
+	_buffer += " = ";
+	if (args.size() == 0) {
+		std::map<std::string, Channel *> channels = manager.getChannels();
+		for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+			std::set<Client *> members = it->second->getMembers();
+			_buffer += "#" + it->second->getName() + " : ";
+			for (std::set<Client *>::iterator mem = members.begin(); mem != members.end(); mem++) {
+				if (it->second->isOperator(*mem) == true)
+					_buffer += "@";
+				_buffer += (*mem)->getNickName() + " ";
+			}
+			_buffer += "\n";
+		}
+	}
+	else {
+		for (size_t i  = 0; i < args.size(); i += 1) {
+		    args[i].erase(std::remove(args[i].begin(), args[i].end(), '#'), args[i].end());
+			Channel *chan = manager.getOrCreateChan(args[i]);
+			_buffer += chan->getName() + ": ";
+			std::set<Client *> members = chan->getMembers();
+			for (std::set<Client *>::iterator mem = members.begin(); mem != members.end(); mem++) {
+				if (chan->isOperator(*mem) == true)
+					_buffer += "@";
+				_buffer += (*mem)->getNickName() + " ";
+			}
+			_buffer += "\n";
+		}
+	}
+	_buffer += "\r\n";
+	client->appendToResponse(_buffer);
+	server->sendResponse(client);
+}
+
 void	Response::runCmd() {
 
 	if (cmd.getType() == HELP)
@@ -686,8 +724,6 @@ void	Response::runCmd() {
 		_pingCmd();
 	else if (cmd.getType() == CLEAR)
 		_clearCmd();
-	else if (cmd.getType() == BROADCAST)
-		_broadCastCmd();
 	else if (cmd.getType() == INVITE)
 		_inviteCmd();
 	else if (cmd.getType() == TOPIC)
@@ -700,6 +736,10 @@ void	Response::runCmd() {
 		_whoCmd();
 	else if (cmd.getType() == MODE)
 		_modeCmd();
+	else if (cmd.getType() == UNKNOWN)
+		_unknownCmd();
+	else if (cmd.getType() == NAMES)
+		_namesCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
