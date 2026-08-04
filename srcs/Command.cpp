@@ -35,23 +35,11 @@ const std::vector<std::string> &Command::getArgs(void) const {
 }
 
 void Command::_parseLine(std::string line) {
-	size_t start = 0;
-	size_t end = line.find(' ');
-	_name = line.substr(start, end - start);
-	std::string::iterator it = std::remove(_name.begin(), _name.end(), ' ');
-	_name.erase(it, _name.end());
-	if (end == std::string::npos)
-		return ;
-	start = end + 1;
-	while (line[start] == ' ')
-		start += 1;
-	while (start < line.size() && end != std::string::npos) {
-		end = line.find(' ', start);
-		_args.push_back(line.substr(start, end -  start));
-		start = end + 1;
-		while (line[start] == ' ')
-			start += 1;
-	}
+	std::stringstream stream(line);
+	std::string token;
+	stream >> _name;
+	while (stream >> token)
+		_args.push_back(token);
 }
 
 

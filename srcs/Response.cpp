@@ -91,7 +91,7 @@ void	Response::_passCmd()
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() != 1)
-		throw(std::runtime_error("Invalid number of args for password command!"));
+		throw(std::runtime_error("Invalid number of args for password command!\r\n"));
 	if (client->getAuthenticated() == true) {
 		_buffer.clear();
 		_buffer +=  "User already authenticated";
