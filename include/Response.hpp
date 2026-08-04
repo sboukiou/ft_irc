@@ -36,6 +36,7 @@ class Response {
 		void	_namesCmd();
 		void	_partCmd();
 		void	_broadCastToChannel(Channel *chan, std::string message, bool includeSender);
+		void	_whoisCmd();
 	public:
 		Response(Command &cmd, Client *cl, std::string password, ChannelManager& manager, Server *server);
 		Response(const Response &other);
