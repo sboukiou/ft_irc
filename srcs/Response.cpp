@@ -770,7 +770,56 @@ void	Response::_partCmd() {
 		client->removeChannel(chan);
 		manager.removeIfEmpty(std::string(chan->getName()));
 	}
+}
 
+void	Response::_whoisCmd() {
+	std::vector<std::string> args = cmd.getArgs();
+	if (args.size() == 0)
+		throw(std::runtime_error(":penguin 431 ali :No nickname given"));
+	if (client->getRegistered() == false)
+		throw(std::runtime_error(":penguin 451 * :You have not registered"));
+	_buffer.clear();
+	for (size_t i = 0; i < args.size(); i += 1) {
+		Client *target = server->getClientByName(args[i]);
+		if (target == NULL) {
+			_buffer = ":";
+			_buffer += SERVER_NAME;
+			_buffer += "401 " + client->getUserName() + " " + args[i];
+			_buffer += " :No such nick/channel";
+		}
+		else {
+		_buffer += ":";
+		_buffer += SERVER_NAME;
+		_buffer += " 311 " + client->getUserName() + " " + target->getUserName();
+		_buffer += " <target_address>  * " + target->getRealName();
+		_buffer += "\n";
+		_buffer += ":";
+		_buffer += SERVER_NAME;
+		_buffer += " 319 " + client->getUserName() + " " + target->getUserName();
+		std::set<Channel *> chans = target->getChannels();
+		_buffer += " :";
+		for (std::set<Channel *>::iterator it = chans.begin(); it != chans.end(); it++) {
+			_buffer += (*it)->isOperator(target)?("@#" + (*it)->getName()):("#" + (*it)->getName());
+			_buffer += " ";
+		}
+		_buffer += "\n";
+		_buffer += ":";
+		_buffer += SERVER_NAME;
+		_buffer += " 312 " + client->getUserName() + " " + target->getUserName();
+		_buffer += SERVER_NAME;
+		_buffer += " ";
+		_buffer += IRC_NAME;
+		_buffer += "\n";
+		_buffer += ":";
+		_buffer += SERVER_NAME;
+		_buffer += " 312 " + client->getUserName() + " " + target->getUserName();
+		_buffer += " End of /WHOIS list";
+		}
+		_buffer += "\n";
+	}
+	_buffer += "\r\n";
+	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 
 void	Response::runCmd() {
@@ -811,6 +860,8 @@ void	Response::runCmd() {
 		_namesCmd();
 	else if (cmd.getType() == PART)
 		_partCmd();
+	else if (cmd.getType() == WHOIS)
+		_whoisCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));

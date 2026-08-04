@@ -8,6 +8,7 @@
 # define RESET   "\x1b[0m"
 
 # define SERVER_NAME "penguin"
+# define IRC_NAME "IRC98"
 
 #include <string>
 #include <vector>
