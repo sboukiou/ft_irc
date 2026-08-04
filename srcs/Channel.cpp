@@ -31,9 +31,13 @@ std::set<Client*>& Channel::getMembers(){
 void Channel::setUserLimit(bool status){
     _userLimit = status;
 }
+    
+void Channel::removeOperator(Client* client){
+    _operators.erase(client);
+}
 
-void Channel::setNMembers(size_t nMembers){
-    _nMembers = nMembers;
+void Channel::setMaxMembers(size_t maxMambers){
+    _maxMambers = maxMambers;
 }
 
 void Channel::setPass(std::string pass){
@@ -52,8 +56,8 @@ bool Channel::getUserLimit(){
     return _userLimit;
 }
 
-size_t Channel::getNMembers(){
-    return _nMembers;
+size_t Channel::getMaxMembers(){
+    return _maxMambers;
 }
 
 std::string Channel::getPass(){

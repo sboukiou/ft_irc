@@ -88,7 +88,7 @@ void Server::removeClient(Client *client)
             pollfds.erase(it);
             break;
         }
-    }        
+    }
     delete client;
 }
 
@@ -118,7 +118,6 @@ int Server::readRequest(Client *client)
     }
     if (read == 0)
     {
-        std::cerr << "Client Disconnected\n";
         client->setDisconnected(true);
         return 1;
     }
@@ -150,15 +149,11 @@ int Server::sendResponse(Client *client)
     }
     else if (bytesend == 0)
     {
-        std::cerr << "Client Disconnected\n";
         client->setDisconnected(true);
         return 1;
     }
     else if (client->getDisconnected())
-    {
-        client->setDisconnected(true);
         return 1;
-    }
     client->getResponse().erase(0, bytesend);
     return 0;
 }
@@ -193,6 +188,7 @@ void Server::handleRequest(pollfd &info)
 		{
 			if (readRequest(it->second))
             {
+                std::cerr << "Client: " << it->second->getNickName() << " Disconnected\n";
                 removeClient(it->second);
 				return ;
             }
@@ -202,6 +198,7 @@ void Server::handleRequest(pollfd &info)
     {
         if (it != Clients.end() && sendResponse(it->second))
         {
+            std::cerr << "Client: " << it->second->getNickName() << " Disconnected\n";
             removeClient(it->second);
             return ;
         }

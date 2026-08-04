@@ -21,7 +21,7 @@ private:
     bool        _channelPass;
     bool        _userLimit;
 
-    size_t         _nMembers;
+    size_t         _maxMambers;
 
 public:
     Channel();
@@ -35,12 +35,12 @@ public:
     void setInviteOnly(bool status);
     void setChannelPass(bool status);
     void setUserLimit(bool status);
-    void setNMembers(size_t nMembers);
+    void setMaxMembers(size_t maxMambers);
     void setPass(std::string pass);
     bool getInviteOnly();
     bool getChannelPass();
     bool getUserLimit();
-    size_t getNMembers();
+    size_t getMaxMembers();
     std::string getPass();
     void addClient(Client* client);
     void removeClient(Client* client);
@@ -50,6 +50,7 @@ public:
     size_t getMemberCount() const;
 
     void addOperator(Client* client);
+    void removeOperator(Client* client);
     bool isOperator(Client* client) const;
 
     void setTopic(const std::string& topic);

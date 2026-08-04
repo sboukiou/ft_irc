@@ -3,6 +3,7 @@
 
 #include "./macros.hpp"
 #include "./Command.hpp"
+#include <errno.h>
 #include "Client.hpp"
 #include "ChannelManager.hpp"
 #include "Server.hpp"
@@ -28,6 +29,7 @@ class Response {
 		void	_unknownCmd();
 		void 	_inviteCmd();
 		void	_topicCmd();
+		void	_modeCmd();
 		void	_privMsgCmd();
 		void	_listCmd();
 		void	_whoCmd();
