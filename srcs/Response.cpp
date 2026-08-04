@@ -822,6 +822,65 @@ void	Response::_whoisCmd() {
 	server->sendResponse(client);
 }
 
+void	Response::_noticeCmd(){
+	if (client->getRegistered() == false)
+		throw(std::runtime_error("Client not registred yet!"));
+	std::vector<std::string> args = cmd.getArgs();
+	_buffer.clear();
+	if (args.size() < 2)
+		return ;
+	
+	_buffer += GREEN;
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " ";
+	if (args[0][0] == '#') {
+		args[0].erase(0, 1);
+		Channel *channel = manager.find(args[0]);
+		if (channel == NULL)
+			return ;
+		std::set<Client *> &members = channel->getMembers();
+		_buffer += "NOTICE #" + args[0] + " ";
+		if (args.size() == 2 && args[1].size() == 1 && args[1][0] == ':')
+			_buffer += ":";
+		else if (args[1][0] != ':')
+			_buffer += args[1];
+		else{
+			for (size_t i = 1; i < args.size(); i++){
+				_buffer += args[i];
+				if (i + 1 != args.size())
+					_buffer += " ";
+			}
+		}
+		_buffer += RESET;
+		_buffer += "\r\n";
+		for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
+		{
+			(*it)->appendToResponse(_buffer);
+			server->sendResponse(*it);
+		}
+	}
+	else {
+		Client *target = server->getClientByName(args[0]);
+		if (target == NULL)
+			return ;
+		_buffer += args[0] + " ";
+		if (args.size() == 2 && args[1].size() == 1 && args[1][0] == ':')
+			_buffer += ":";
+		else if (args[1][0] != ':')
+			_buffer += args[1];
+		else{
+			for (size_t i = 1; i < args.size(); i++){
+				_buffer += args[i];
+				if (i + 1 != args.size())
+					_buffer += " ";
+			}
+		}
+		_buffer += RESET;
+		_buffer += "\r\n";
+		target->appendToResponse(_buffer);
+		server->sendResponse(target);
+	}
+}
+
 void	Response::runCmd() {
 
 	if (cmd.getType() == HELP)
@@ -862,6 +921,8 @@ void	Response::runCmd() {
 		_partCmd();
 	else if (cmd.getType() == WHOIS)
 		_whoisCmd();
+	else if (cmd.getType() == NOTICE)
+		_noticeCmd();
 	else {
 		std::cout << "Type is : " << cmd.getType() << std::endl;
 		throw(std::runtime_error("(" + cmd.getName() + ")" + ": Not implemented yet!"));
