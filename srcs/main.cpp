@@ -14,14 +14,11 @@ int main(int ac, char **av) {
 	password = std::string(av[2]);
 	Server server(port, password);
 
-	LOG("Launching the server");
 	try {
 		server.run();
 	}
 	catch (std::exception &e) {
-		ERR(e.what());
-		// TODO: Implement the cleanup method for the server
-		// server.cleanup();
+		std::cerr << e.what();
 		return (0);
 	}
 	return (0);
