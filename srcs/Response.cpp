@@ -156,103 +156,130 @@ bool isValidChannelName(const std::string &channel)
     return true;
 }
 
+std::vector<std::string> split(const std::string &str)
+{
+    std::vector<std::string> result;
+    size_t start = 0, pos;
+    while ((pos = str.find(',', start)) != std::string::npos){
+        result.push_back(str.substr(start, pos - start));
+        start = pos + 1;
+    }
+    result.push_back(str.substr(start));
+    return result;
+}
+
 void	Response::_joinCmd()
 {
 	if (client->getRegistered() == false)
 		throw(std::runtime_error(creatBuffer("451", client->getNickName().size() ? client->getNickName() : "*", " :You have not registered\r\n")));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
-	if ((args.size() != 2 && args.size() != 1))
+	if ((args.empty()))
 		throw(std::runtime_error(creatBuffer("461", client->getNickName().size() ? client->getNickName() : "*", " JOIN :Not enough parameters\r\n")));
-	std::string channelName = args[0];
-	if (!isValidChannelName(channelName))
-		throw(std::runtime_error(creatBuffer("476", client->getNickName().size() ? client->getNickName() : "*", args[0] + " :Bad Channel Mask\r\n")));
-	channelName.erase(0, 1);
-	Channel *channel = manager.find(channelName);
-	if (channel == NULL)
+	std::vector<std::string> channels = split(args[0]);
+	std::vector<std::string> passwords = split(args.size() > 1 ? args[1] : "");
+	for (size_t i = 0; i <channels.size(); i++)
 	{
-		if (args.size() == 1)
-			channel = manager.getOrCreateChan(channelName);
-		else
-			channel = manager.getOrCreateChan(channelName, args[1]);
-		channel->addClient(client);
-		channel->addOperator(client);
-	}
-	else if (channel->isMember(client))
-		return ;
-	else if (channel->getUserLimit() && channel->getMemberCount() >= channel->getMaxMembers())
-	{
-		_buffer += creatBuffer("471", client->getNickName(), "#" + channelName + " :Cannot join channel (+l)\r\n");
-		return ;
-	}
-	else if (channel->getChannelPass() && args.size() == 2 && args[1] != channel->getPass())
-	{
-		_buffer += creatBuffer("475", client->getNickName(), "#" + channelName + " :Cannot join channel (+k)\r\n");
-		return ;
-	}
-	else if (channel->getChannelPass() && args.size() == 1)
-	{
-		_buffer += creatBuffer("475", client->getNickName(), "#" + channelName + " :Cannot join channel (+k)\r\n");
-		return ;
-	}
-	else if (channel->getInviteOnly())
-	{
-		if (client->isInvitedToChannel(channel))
-			client->removeInvitedChannel(channel);
-		else
-		{
-			_buffer += creatBuffer("473", client->getNickName(), "#" + channelName + " :Cannot join channel (+i)\r\n");
-			return ;
+		std::string channelName = channels[i];
+		std::string password = (i < passwords.size()) ? passwords[i] : "";
+		if (!isValidChannelName(channelName)){
+			_buffer = creatBuffer("476", client->getNickName().size() ? client->getNickName() : "*", channelName + " :Bad Channel Mask\r\n");
+			client->appendToResponse(_buffer);
+			server->sendResponse(client);
+			_buffer.clear();
+			continue;
 		}
+		channelName.erase(0, 1);
+		Channel *channel = manager.find(channelName);
+		if (channel == NULL)
+		{
+			if (password.empty())
+				channel = manager.getOrCreateChan(channelName);
+			else
+				channel = manager.getOrCreateChan(channelName, password);
+			channel->addClient(client);
+			channel->addOperator(client);
+		}
+		else if (channel->isMember(client))
+			continue;
+		else if (channel->getUserLimit() && channel->getMemberCount() >= channel->getMaxMembers())
+		{
+			_buffer += creatBuffer("471", client->getNickName(), "#" + channelName + " :Cannot join channel (+l)\r\n");
+			client->appendToResponse(_buffer);
+			server->sendResponse(client);
+			_buffer.clear();
+			continue;
+		}
+		else if (channel->getChannelPass() && password != channel->getPass())
+		{
+			_buffer += creatBuffer("475", client->getNickName(), "#" + channelName + " :Cannot join channel (+k)\r\n");
+			client->appendToResponse(_buffer);
+			server->sendResponse(client);
+			_buffer.clear();
+			continue;
+		}
+		else if (channel->getInviteOnly())
+		{
+			if (client->isInvitedToChannel(channel))
+				client->removeInvitedChannel(channel);
+			else
+			{
+				_buffer += creatBuffer("473", client->getNickName(), "#" + channelName + " :Cannot join channel (+i)\r\n");
+				client->appendToResponse(_buffer);
+				server->sendResponse(client);
+				_buffer.clear();
+				continue;
+			}
+		}
+		if (channel->isMember(client) == false)
+			channel->addClient(client);
+		client->appendChannels(channel);
+		std::set<Client*> &members = channel->getMembers();
+		_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " JOIN #" + channelName;
+		_buffer += "\r\n";
+		for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
+		{	
+			(*it)->appendToResponse(_buffer);
+			server->sendResponse(*it);
+		}
+		_buffer.clear();
+		if (channel->getTopic().empty() == false)
+		{
+			std::string topic;
+			topic += ":";
+			topic += SERVER_NAME;
+			topic += " 332 " + client->getNickName() + " #" + channelName + " :" + channel->getTopic() + "\r\n";
+			client->appendToResponse(topic);
+			server->sendResponse(client);
+			topic.clear();
+		}
+		else{
+			std::string topic;
+			topic += ":";
+			topic += SERVER_NAME;
+			topic += " 331 " + client->getNickName() + " #" + channelName + " :No topic is set\r\n";
+			client->appendToResponse(topic);
+			server->sendResponse(client);
+			topic.clear();
+		}
+		std::set<Client*>::iterator last = members.end();
+		--last;
+		_buffer += ":";
+		_buffer += SERVER_NAME;
+		_buffer += " 353 " + client->getNickName() + " = #" +channelName + " :";
+		for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
+		{
+			if (channel->getOperators().find(*it) != channel->getOperators().end())
+				_buffer += "@";
+			_buffer += (*it)->getNickName();
+			if (it != last)
+				_buffer += " ";
+		}
+		_buffer += "\r\n:";
+		_buffer += SERVER_NAME;
+		_buffer += " 366 " + client->getNickName() + " #" + channelName + " :End of /NAMES list.\r\n";
+		client->appendToResponse(_buffer);
 	}
-	if (channel->isMember(client) == false)
-		channel->addClient(client);
-	client->appendChannels(channel);
-	std::set<Client*> &members = channel->getMembers();
-	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " JOIN #" + channelName;
-	_buffer += "\r\n";
-	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
-	{	
-		(*it)->appendToResponse(_buffer);
-		server->sendResponse(*it);
-	}
-	_buffer.clear();
-	if (channel->getTopic().empty() == false)
-	{
-		std::string topic;
-		topic += ":";
-		topic += SERVER_NAME;
-		topic += " 332 " + client->getNickName() + " #" + channelName + " :" + channel->getTopic() + "\r\n";
-		client->appendToResponse(topic);
-		server->sendResponse(client);
-		topic.clear();
-	}
-	else{
-		std::string topic;
-		topic += ":";
-		topic += SERVER_NAME;
-		topic += " 331 " + client->getNickName() + " #" + channelName + " :No topic is set\r\n";
-		client->appendToResponse(topic);
-		server->sendResponse(client);
-		topic.clear();
-	}
-	std::set<Client*>::iterator last = members.end();
-	--last;
-	_buffer += ":";
-	_buffer += SERVER_NAME;
-	_buffer += " 353 " + client->getNickName() + " = #" +channelName + " :";
-	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
-	{
-		if (channel->getOperators().find(*it) != channel->getOperators().end())
-			_buffer += "@";
-		_buffer += (*it)->getNickName();
-		if (it != last)
-			_buffer += " ";
-	}
-	_buffer += "\r\n:";
-	_buffer += SERVER_NAME;
-	_buffer += " 366 " + client->getNickName() + " #" + channelName + " :End of /NAMES list.\r\n";
-	client->appendToResponse(_buffer);
 }
 
 void	Response::_kickCmd()
