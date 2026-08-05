@@ -145,6 +145,17 @@ void	Response::_passCmd()
 	client->setAuthenticated(true);
 }
 
+bool isValidChannelName(const std::string &channel)
+{
+    if (channel.empty() || channel[0] != '#'|| channel.size() == 1 || channel.size() > 50)
+        return false;
+    for (size_t i = 1; i < channel.size(); ++i){
+        if (channel[i] == ' ' || channel[i] == ',' || channel[i] == '\a' || channel[i] == '\r' || channel[i] == '\n' || channel[i] == '\0')
+            return false;
+    }
+    return true;
+}
+
 void	Response::_joinCmd()
 {
 	if (client->getRegistered() == false)
@@ -154,7 +165,7 @@ void	Response::_joinCmd()
 	if ((args.size() != 2 && args.size() != 1))
 		throw(std::runtime_error(creatBuffer("461", client->getNickName().size() ? client->getNickName() : "*", " JOIN :Not enough parameters\r\n")));
 	std::string channelName = args[0];
-	if (channelName.size() < 2 || channelName[0] != '#')
+	if (!isValidChannelName(channelName))
 		throw(std::runtime_error(creatBuffer("476", client->getNickName().size() ? client->getNickName() : "*", args[0] + " :Bad Channel Mask\r\n")));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
@@ -253,7 +264,7 @@ void	Response::_kickCmd()
 	if ((args.size() != 2 && args.size() != 3))
 		throw(std::runtime_error("Invalid number of args for KICK command!"));
 	std::string channelName = args[0];
-	if (channelName.size() < 2 || channelName[0] != '#')
+	if (!isValidChannelName(channelName))
 		throw(std::runtime_error("Invalid channel name [# at the start]!"));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
@@ -325,7 +336,7 @@ void 	Response::_inviteCmd() {
 	if (args.size() != 2)
 		throw(std::runtime_error("Invalid number of args for invite command!"));
 	std::string channelName = args[1];
-	if (channelName.size() < 2 || channelName[0] != '#')
+	if (!isValidChannelName(channelName))
 		throw(std::runtime_error("Invalid channel name [# at the start]!"));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
@@ -353,7 +364,7 @@ void 	Response::_topicCmd() {
 	if (args.empty())
 		throw(std::runtime_error(creatBuffer("461", client->getNickName(), " :Not enough parameters\r\n")));
 	std::string channelName = args[0];
-	if (channelName.size() < 2 || channelName[0] != '#')
+	if (!isValidChannelName(channelName))
 		throw(std::runtime_error(creatBuffer("403", client->getNickName(), " :No such channel\r\n")));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
