@@ -17,7 +17,7 @@ std::string creatBuffer(std::string numeric, std::string target, std::string mes
 {
 	std::string buffer;
 	buffer += SERVER_NAME;
-	buffer += " " + numeric + " " + target + " :" + message + "\r\n";
+	buffer += " " + numeric + " " + target + " :" + message;
 	return buffer;
 }
 
@@ -37,9 +37,9 @@ void	Response::_nickNameCmd() {
 	if (client->getAuthenticated() == false)
 		throw(std::runtime_error("Client not authenticated yet!"));
 	if (args.size() != 1)
-		throw(std::runtime_error(creatBuffer("432", "*", "Erroneous nickname")));
+		throw(std::runtime_error(creatBuffer("432", "*", "Erroneous nickname\r\n")));
 	if (server->getClientByName(args[0]) || args[0] == "ircbot")
-		throw(std::runtime_error(creatBuffer("433", args[0], "Nickname is already in use")));
+		throw(std::runtime_error(creatBuffer("433", args[0], "Nickname is already in use\r\n")));
 	client->setNickName(args[0]);
 	_buffer += "Done, New nickname is [" + client->getNickName() + "]";
 	_buffer += "\r\n";
@@ -103,12 +103,12 @@ void	Response::_passCmd()
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() != 1)
-		throw(std::runtime_error(creatBuffer("461", client->getNickName().size() ? client->getNickName() : "*", "Not enough parameters")));
+		throw(std::runtime_error(creatBuffer("461", client->getNickName().size() ? client->getNickName() : "*", "Not enough parameters\r\n")));
 	if (client->getRegistered() == true) 
-		throw(std::runtime_error(creatBuffer("462", client->getNickName().size() ? client->getNickName() : "*", "You may not reregister")));
+		throw(std::runtime_error(creatBuffer("462", client->getNickName().size() ? client->getNickName() : "*", "You may not reregister\r\n")));
 	if (args[0] != _password) {
 		client->setDisconnected(true);
-		throw(std::runtime_error(creatBuffer("464", client->getNickName().size() ? client->getNickName() : "*", "Password incorrect")));
+		throw(std::runtime_error(creatBuffer("464", client->getNickName().size() ? client->getNickName() : "*", "Password incorrect\r\n")));
 	}
 	client->setAuthenticated(true);
 }
@@ -306,21 +306,21 @@ void 	Response::_inviteCmd() {
 
 void 	Response::_topicCmd() {
 	if (client->getRegistered() == false)
-		throw(std::runtime_error(creatBuffer("451", client->getNickName().size() ? client->getNickName() : "*", "You have not registered")));
+		throw(std::runtime_error(creatBuffer("451", client->getNickName().size() ? client->getNickName() : "*", "You have not registered\r\n")));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.empty())
-		throw(std::runtime_error(creatBuffer("461", client->getNickName(), "Not enough parameters")));
+		throw(std::runtime_error(creatBuffer("461", client->getNickName(), "Not enough parameters\r\n")));
 	std::string channelName = args[0];
 	if (channelName.size() < 2 || channelName[0] != '#')
-		throw(std::runtime_error(creatBuffer("403", client->getNickName(), "No such channel")));
+		throw(std::runtime_error(creatBuffer("403", client->getNickName(), "No such channel\r\n")));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
-		throw(std::runtime_error(creatBuffer("403", client->getNickName(), "No such channel")));
+		throw(std::runtime_error(creatBuffer("403", client->getNickName(), "No such channel\r\n")));
 	std::string topic;
 	if (!channel->isMember(client))
-		throw(std::runtime_error(creatBuffer("442", client->getNickName(), "You're not on that channel")));
+		throw(std::runtime_error(creatBuffer("442", client->getNickName(), "You're not on that channel\r\n")));
 	if (args.size() == 1)
 	{
 		topic = channel->getTopic();
@@ -341,7 +341,7 @@ void 	Response::_topicCmd() {
 		return ;
 	}
 	if (channel->isTopicRestricted() && !channel->isOperator(client))
-		throw(std::runtime_error(creatBuffer("482", client->getNickName(), "You're not an operator of this channel")));
+		throw(std::runtime_error(creatBuffer("482", client->getNickName(), "You're not an operator of this channel\r\n")));
 	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " TOPIC #" + channelName + " :";
 	if (args[1][0] != ':'){
 		_buffer += args[1];
