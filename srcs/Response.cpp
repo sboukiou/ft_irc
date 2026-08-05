@@ -339,7 +339,7 @@ void	Response::_pingCmd()
 void ::Response::_clearCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	if (args.size() != 0)
-		throw(std::runtime_error("Invalid number of args for clear command!"));
+		throw(std::runtime_error("999 ERR_TOOMANYPARAMS :CLEAR does not accept parameters"));
 	_buffer.clear();
 	_buffer = "\x1B[3J\x1B[2J\x1B[H";
 	client->appendToResponse(_buffer);
