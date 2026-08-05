@@ -10,6 +10,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <cctype>
 #include <algorithm>
 #include <sstream>
 

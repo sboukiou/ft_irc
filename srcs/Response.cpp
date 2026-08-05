@@ -419,6 +419,8 @@ void	Response::_privMsgCmd() {
 		_buffer += "\r\n";
 		target->appendToResponse(_buffer);
 		server->sendResponse(target);
+		client->appendToResponse(_buffer);
+		server->sendResponse(client);
 	}
 }
 
