@@ -59,12 +59,34 @@ void	Response::_nickNameCmd() {
         throw std::runtime_error(creatBuffer("432", args[0], " :Erroneous nickname\r\n"));
 	if (args[0] == "ircbot" || server->getClientByName(args[0]))
 		throw(std::runtime_error(creatBuffer("433", args[0], " :Nickname is already in use\r\n")));
+	if (client->getRegistered() == true){
+		_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " NICK :" + args[0] + "\r\n";
+		client->setNickName(args[0]);
+		std::set<Client*> notified;
+		notified.insert(client);
+		for (std::set<Channel *>::iterator channels = client->getChannels().begin(); channels != client->getChannels().end(); channels++)
+		{
+			for (std::set<Client *>::iterator members = (*channels)->getMembers().begin(); members != (*channels)->getMembers().end(); members++)
+			{
+				if (notified.count(*members))
+					continue;
+				(*members)->appendToResponse(_buffer);
+				server->sendResponse(*members);
+				notified.insert(*members);
+			}
+		}
+		client->appendToResponse(_buffer);
+		server->sendResponse(client);
+		_buffer.clear();
+		notified.clear();
+		return ;
+	}
 	client->setNickName(args[0]);
 	_buffer += "Done, New nickname is [" + client->getNickName() + "]\r\n";
 	if (client->getUserName().size() && client->getRegistered() == false)
 	{
 		client->setRegistered(true);
-		_buffer += creatBuffer("001", client->getNickName(), " :Welcome to the Internet Relay Network");
+		_buffer += creatBuffer("001", client->getNickName(), ":Welcome to the Internet Relay Network");
 		_buffer += " " + client->getNickName() + "!" + client->getUserName() + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
@@ -124,7 +146,7 @@ void	Response::_userCmd(void) {
 	if (client->getNickName().size() && client->getRegistered() == false)
 	{
 		client->setRegistered(true);
-		_buffer += creatBuffer("001", client->getNickName(), " :Welcome to the Internet Relay Network");
+		_buffer += creatBuffer("001", client->getNickName(), ":Welcome to the Internet Relay Network");
 		_buffer += " " + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
