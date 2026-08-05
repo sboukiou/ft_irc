@@ -461,10 +461,10 @@ void	Response::_privMsgCmd() {
 		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
 		Channel *target = manager.find(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error("403 ERR_NOSUCHCHANNEL" + args[0] +  " :No such channel"));
+			throw(std::runtime_error("403 ERR_NOSUCHCHANNEL" + args[0] +  " :No such channel\r\n"));
 		std::set<Client *> clients = target->getMembers();
 		if (std::find(clients.begin(), clients.end(), client) == clients.end())
-			throw(std::runtime_error("404 ERR_CANNOTSENDTOCHAN " + args[0] + " :Cannot send to channel"));
+			throw(std::runtime_error("404 ERR_CANNOTSENDTOCHAN " + args[0] + " :Cannot send to channel\r\n"));
 		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 			if (*it != client) {
 				_buffer = ":" + client->getNickName() + "!";
@@ -486,7 +486,7 @@ void	Response::_privMsgCmd() {
 	else {
 		Client *target = server->getClientByName(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error("401 ERR_NOSUCHNICK " + args[0] + " :No such nick/channel"));
+			throw(std::runtime_error("401 ERR_NOSUCHNICK " + args[0] + " :No such nick/channel\r\n"));
 		_buffer.clear();
 		_buffer = ":" + client->getNickName() + "!";
 		_buffer += client->getUserName();
@@ -507,7 +507,9 @@ void	Response::_privMsgCmd() {
 
 void	Response::_listCmd() {
 	if (cmd.getArgs().size() != 0)
-		throw(std::runtime_error("List command is not supposed to have any arguments!"));
+		throw(std::runtime_error("999 ERR_TOOMANYPARAMS :LIST does not accept parameters\r\n"));
+	if (client->getRegistered() == false)
+		throw(std::runtime_error("451 ERR_NOTREGISTERED :You have not registered\r\n"));
 	std::set<Channel *> channels = client->getChannels();
 	for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
 		_buffer.clear();
