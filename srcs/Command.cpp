@@ -38,6 +38,8 @@ void Command::_parseLine(std::string line) {
 	std::stringstream stream(line);
 	std::string token;
 	stream >> _name;
+	for (size_t  i = 0; i < _name.size(); i += 1)
+		_name[i] = std::toupper(_name[i]);
 	while (stream >> token)
 		_args.push_back(token);
 }
