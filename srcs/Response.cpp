@@ -38,7 +38,7 @@ void	Response::_nickNameCmd() {
 		throw(std::runtime_error("Client not authenticated yet!"));
 	if (args.size() != 1)
 		throw(std::runtime_error(creatBuffer("432", "*", "Erroneous nickname")));
-	if (server->getClientByName(args[0]))
+	if (server->getClientByName(args[0]) || args[0] == "ircbot")
 		throw(std::runtime_error(creatBuffer("433", args[0], "Nickname is already in use")));
 	client->setNickName(args[0]);
 	_buffer += "Done, New nickname is [" + client->getNickName() + "]";
