@@ -50,7 +50,7 @@ void	Response::_nickNameCmd() {
 	{
 		client->setRegistered(true);
 		_buffer += creatBuffer("001", client->getNickName(), "Welcome to the Internet Relay Network");
-		_buffer += client->getNickName() + "!" + client->getUserName() + SERVER_NAME + "\r\n";
+		_buffer += " " + client->getNickName() + "!" + client->getUserName() + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
 }
@@ -70,21 +70,23 @@ void	Response::_userCmd(void) {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (client->getAuthenticated() == false)
-		throw(std::runtime_error("Client not authenticated yet!"));
+		throw(std::runtime_error(creatBuffer("451", "*", "You have not registered\r\n")));
+	if (client->getRegistered())
+    	throw(std::runtime_error(creatBuffer("462", client->getNickName().empty() ? "*" : client->getNickName(), "You may not reregister\r\n")));
 	if (args.size() < 4)
-		throw(std::runtime_error("Invalid number of args for USER command!"));
-	if (args[3][0] != ':')
-		throw(std::runtime_error("Invalid realname-> [:realname]"));
+		throw(std::runtime_error(creatBuffer("461", client->getUserName().size() ? client->getUserName() : "*", "USER :Not enough parameters\r\n")));
 	client->setUserName(args[0]);
-	std::string realName = args[3];
-	realName.erase(0, 1);
-	if (realName.size() == 0 && args.size() == 4)
-		throw(std::runtime_error("Invalid realname-> [:realname]"));
-	if (realName.size() > 0)
-		realName += " ";
-	for (size_t i = 4; i < args.size(); i++)
-		realName += args[i] + " ";
-	realName.erase(realName.size() - 1);
+	std::string realName;
+	if (args[3][0] != ':')
+		realName = args[3];
+	else{
+		args[3].erase(0, 1);
+		for (size_t i = 3; i < args.size(); i++){
+			realName += args[i];
+			if (i + 1 != args.size())
+				realName += " ";
+		}
+	}
 	client->setRealName(realName);	
 	_buffer += "Done, New username is [" + client->getUserName() + "]";
 	_buffer += " and realname is [" + client->getRealName() + "]";
@@ -92,8 +94,8 @@ void	Response::_userCmd(void) {
 	if (client->getNickName().size() && client->getRegistered() == false)
 	{
 		client->setRegistered(true);
-		_buffer += "User: [" + client->getUserName() + "] registered successfully";
-		_buffer += "\r\n";
+		_buffer += creatBuffer("001", client->getNickName(), "Welcome to the Internet Relay Network");
+		_buffer += " " + client->getNickName() + "!" + client->getUserName() + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
 }
