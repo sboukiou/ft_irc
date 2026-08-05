@@ -330,7 +330,7 @@ void	Response::_pingCmd()
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() != 1)
-		throw(std::runtime_error("Invalid number of args for USER command!"));
+		throw(std::runtime_error("Invalid number of args for USER command!\r\n"));
 	_buffer += "PONG ";
 	_buffer += args[0];
 	_buffer += "\r\n";
@@ -339,7 +339,7 @@ void	Response::_pingCmd()
 void ::Response::_clearCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	if (args.size() != 0)
-		throw(std::runtime_error("999 ERR_TOOMANYPARAMS :CLEAR does not accept parameters"));
+		throw(std::runtime_error("999 ERR_TOOMANYPARAMS :CLEAR does not accept parameters\r\n"));
 	_buffer.clear();
 	_buffer = "\x1B[3J\x1B[2J\x1B[H";
 	client->appendToResponse(_buffer);
@@ -450,19 +450,21 @@ void 	Response::_topicCmd() {
 
 void	Response::_privMsgCmd() {
 	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client not registred yet!"));
+		throw(std::runtime_error("451 ERR_NOTREGISTERED :You have not registered\r\n"));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
-	if (args.size() < 2)
-		throw(std::runtime_error("At least two arguments are needed: <Target> and <Message>"));
+	if (args.size() == 0)
+		throw(std::runtime_error("411 ERR_NORECIPIENT :No recipient given (PRIVMSG)\r\n"));
+	if (args.size() == 1)
+		throw(std::runtime_error("412 ERR_NOTEXTTOSEND :No text to send\r\n"));
 	if (args[0][0] == '#') {
 		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
 		Channel *target = manager.find(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error("Target channel doesn't exits"));
+			throw(std::runtime_error("403 ERR_NOSUCHCHANNEL" + args[0] +  " :No such channel"));
 		std::set<Client *> clients = target->getMembers();
 		if (std::find(clients.begin(), clients.end(), client) == clients.end())
-			throw(std::runtime_error("you are not a member in the target channel"));
+			throw(std::runtime_error("404 ERR_CANNOTSENDTOCHAN " + args[0] + " :Cannot send to channel"));
 		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 			if (*it != client) {
 				_buffer = ":" + client->getNickName() + "!";
@@ -484,7 +486,7 @@ void	Response::_privMsgCmd() {
 	else {
 		Client *target = server->getClientByName(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error("Target client doesn't exits"));
+			throw(std::runtime_error("401 ERR_NOSUCHNICK " + args[0] + " :No such nick/channel"));
 		_buffer.clear();
 		_buffer = ":" + client->getNickName() + "!";
 		_buffer += client->getUserName();
