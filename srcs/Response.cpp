@@ -153,12 +153,16 @@ void	Response::_userCmd(void) {
 		_buffer += " " + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
+	_buffer.clear();
 }
 
 void	Response::_passCmd()
 {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
+	if (client->getDisconnected() == true)
+		return ;
 	if (args.size() != 1)
 		throw(std::runtime_error(creatBuffer("461", client->getNickName().size() ? client->getNickName() : "*", " :Not enough parameters\r\n")));
 	if (client->getRegistered() == true) 
