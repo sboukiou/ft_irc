@@ -79,7 +79,10 @@ void Server::acceptClient()
 void Server::removeClient(Client *client)
 {
     for (std::set<Channel*>::iterator it = client->getChannels().begin(); it != client->getChannels().end(); ++it)
+    {
         (*it)->removeClient(client);
+        manager.removeIfEmpty((*it)->getName());
+    }
     Clients.erase(client->getFd());
     for (std::vector<pollfd>::iterator it = pollfds.begin(); it != pollfds.end(); it++)
     {
