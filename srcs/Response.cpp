@@ -835,28 +835,28 @@ void	Response::_partCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 
 	if (client->getRegistered() == false)
-		throw(std::runtime_error(":penguin 451 * :You have not registered "));
+		throw(std::runtime_error(":" + SERVER_NAME + " 451 * :You have not registered\r\n"));
 	if (args.size() == 0)
-		throw(std::runtime_error(":penguin 461 PART :Not enough parameters"));
+		throw(std::runtime_error(":" + SERVER_NAME + " 461 PART :Not enough parameters\r\n"));
 	size_t start = 0;
 	for (start = 0; start < args.size(); start += 1)
 		if (args[start][0] == ':')
 			break ;
 	if (start == 0)
-		throw(std::runtime_error(":penguin 461 :Invalid token"));
+		throw(std::runtime_error(":" + SERVER_NAME + " 461 :Invalid token\r\n"));
 	std::string reason;
 	for (size_t i = start; i < args.size(); i += 1)
 		reason += args[i] + " ";
 	for (size_t i = 0; i < start; i += 1) {
 		if (args[i].empty() || args[i][0] != '#') {
-			client->appendToResponse(":penguin 403 " + client->getNickName() + 
+			client->appendToResponse(":" + SERVER_NAME + " 403 " + client->getNickName() + 
 					" " + args[i] + " :No such channel\r\n");
 			server->sendResponse(client);
 			continue ;
 		}
 		std::string name = args[i].substr(1);
 		if (name.empty()) {
-			client->appendToResponse(":penguin 403 " + client->getNickName()
+			client->appendToResponse(":" + SERVER_NAME + " 403 " + client->getNickName()
 					+ " " + args[i] + " :No such channel\r\n");
 			server->sendResponse(client);
 			continue ;
@@ -864,13 +864,13 @@ void	Response::_partCmd() {
 
 		Channel *chan = manager.find(name);
 		if (chan == NULL) {
-			client->appendToResponse(":penguin 403 " + client->getNickName()
+			client->appendToResponse(":" + SERVER_NAME + " 403 " + client->getNickName()
 					+ " #" + name + " :No such channel\r\n");
 			server->sendResponse(client);
 			continue ;
 		}
 		if (chan->isMember(client) == false) {
-			client->appendToResponse(":penguin 442 " + client->getNickName() + " #" + name + " :You're not on that channel\r\n");
+			client->appendToResponse(":" + SERVER_NAME + " 442 " + client->getNickName() + " #" + name + " :You're not on that channel\r\n");
 			server->sendResponse(client);
 			continue ;
 		}
@@ -885,6 +885,7 @@ void	Response::_partCmd() {
 		manager.removeIfEmpty(std::string(chan->getName()));
 	}
 }
+
 
 void	Response::_whoisCmd() {
 	std::vector<std::string> args = cmd.getArgs();
