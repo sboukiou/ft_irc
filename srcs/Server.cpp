@@ -106,7 +106,6 @@ void Server::removeClient(Client *client)
 void Server::extractCommand(Client *client)
 {
     size_t pos;
-    std::cout << "Current buffer: [" << client->getBuffer() << "]\n";
     while ((pos = client->getBuffer().find("\n")) != std::string::npos && !client->getDisconnected())
     {
 		/* TODO: Implement this */
@@ -133,9 +132,6 @@ int Server::readRequest(Client *client)
         client->setDisconnected(true);
         return 1;
     }
-    std::cout << "Received: [";
-std::cout.write(buffer, read);
-std::cout << "] size=" << read << std::endl;
     client->appendBuffer(std::string(buffer, read));
     extractCommand(client);
     if (client->getDisconnected() == true)
