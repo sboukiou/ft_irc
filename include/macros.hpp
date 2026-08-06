@@ -4,6 +4,7 @@
 
 # define SERVER_NAME std::string("localhost")
 # define IRC_NAME "IRC98"
+# define MAX_COMMAND_SIZE 512
 
 #include <string>
 #include <vector>
