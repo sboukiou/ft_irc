@@ -361,30 +361,33 @@ void ::Response::_unknownCmd() {
 
 void 	Response::_inviteCmd() {
 	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client not registred yet!"));
+		throw(std::runtime_error(creatBuffer("451", client->getNickName().size() ? client->getNickName() : "*", " :You have not registered\r\n")));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() != 2)
-		throw(std::runtime_error("Invalid number of args for invite command!"));
+		throw(std::runtime_error(creatBuffer("461", client->getNickName(), " INVITE :Not enough parameters\r\n")));
 	std::string channelName = args[1];
 	if (!isValidChannelName(channelName))
-		throw(std::runtime_error("Invalid channel name [# at the start]!"));
+		throw(std::runtime_error(creatBuffer("476", client->getNickName(), args[1] + " :Bad Channel Mask\r\n")));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
-		throw(std::runtime_error("There is no channel with this name!"));
+		throw(std::runtime_error(creatBuffer("403", client->getNickName(), args[1] + " :No such channel\r\n")));
+	if (!channel->isMember(client))
+    	throw(std::runtime_error(creatBuffer("442", client->getNickName(), " " + args[1] + " :You're not on that channel\r\n")));
 	if (!channel->isOperator(client))
-		throw(std::runtime_error("Your not operator!"));
-	if (channel->isMemberByName(channelName) != NULL)
-		throw(std::runtime_error("already a member!"));
+		throw(std::runtime_error(creatBuffer("482", client->getNickName(), args[1] + " :You're not channel operator\r\n")));
 	Client *invitedClient = server->getClientByName(args[0]);
 	if (invitedClient == NULL)
-		throw(std::runtime_error("There is no client with this name!"));
+		throw(std::runtime_error(creatBuffer("401", client->getNickName(), args[0] + " :No such nick/channel\r\n")));
+	if (channel->isMember(invitedClient))
+		throw(std::runtime_error(creatBuffer("443", client->getNickName(), args[0] + " " + args[1] + " :is already on that channel\r\n")));
 	invitedClient->addInvitedChannel(channel);
-	_buffer += "Your invited to the channel: " + channelName;
-	_buffer += "\r\n";
+	_buffer = ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " INVITE " + invitedClient->getNickName() + " :" + args[1] + "\r\n";
 	invitedClient->appendToResponse(_buffer);
 	server->sendResponse(invitedClient);
+	client->appendToResponse(creatBuffer("341", client->getNickName(), invitedClient->getNickName() + " " + args[1] + "\r\n"));
+	server->sendResponse(client);
 }
 
 void 	Response::_topicCmd() {
@@ -517,37 +520,93 @@ void	Response::_listCmd() {
 	}
 }
 
+void sendToChannelMembers(Channel *channel, const std::string &message, Server *server) {
+	std::set<Client*> &members = channel->getMembers();
+	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
+	{
+		(*it)->appendToResponse(message);
+		server->sendResponse(*it);
+	}
+}
+
+void validateChannelModes(std::string &appliedModes, std::string &appliedArgs)
+{
+    std::string result;
+    char currentSign = '\0';
+    for (size_t i = 0; i < appliedModes.size(); ++i)
+    {
+        if (appliedModes[i] == '+' || appliedModes[i] == '-'){
+            if (appliedModes[i] != currentSign){
+                result += appliedModes[i];
+                currentSign = appliedModes[i];
+            }
+        }
+        else
+            result += appliedModes[i];
+    }
+    appliedModes = result;
+    while (!appliedArgs.empty() && appliedArgs[appliedArgs.size() - 1] == ' ')
+        appliedArgs.erase(appliedArgs.size() - 1);
+}
+
 void Response::_modeCmd()
 {
 	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client not registred yet!"));
+		throw(std::runtime_error(creatBuffer("451", client->getNickName().size() ? client->getNickName() : "*", " :You have not registered\r\n")));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
-	if (args.size() < 2)
-		throw(std::runtime_error("Invalid number of args for topic command!"));
+	if (args.empty())
+		throw(std::runtime_error(creatBuffer("461", client->getNickName(), " MODE :Not enough parameters\r\n")));
 	std::string channelName = args[0];
-	if (channelName.size() < 2 || channelName[0] != '#')
-		throw(std::runtime_error("Invalid channel name [# at the start]!"));
+	if (isValidChannelName(channelName) == false)
+		throw(std::runtime_error(creatBuffer("476", client->getNickName(), args[0] + " :Bad Channel Mask\r\n")));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
-		throw(std::runtime_error("There is no channel with this name!"));
+		throw(std::runtime_error(creatBuffer("403", client->getNickName(), args[0] + " :No such channel\r\n")));
+	if (channel->isMember(client) == false)
+		throw(std::runtime_error(creatBuffer("442", client->getNickName(), args[0] + " :You're not on that channel\r\n")));
+	if (args.size() == 1)
+	{
+		_buffer += ":server 324 " + client->getNickName() + " " + args[0] + " +";
+		if (channel->getInviteOnly())
+			_buffer += "i";
+		if (channel->isTopicRestricted())
+			_buffer += "t";
+		if (channel->getUserLimit())
+			_buffer += "l";
+		if (channel->getChannelPass())
+			_buffer += "k";
+		_buffer += "\r\n";
+		client->appendToResponse(_buffer);
+		server->sendResponse(client);
+		return ;
+	}
 	std::string mode = args[1];
 	if (mode.size() < 2 || (mode[0] != '+' && mode[0] != '-'))
-		throw(std::runtime_error("Invalid start of mode '- | +'!"));
-	if (channel->isMember(client) == false)
-		throw(std::runtime_error("Not a member!"));
+		throw(std::runtime_error(creatBuffer("472", client->getNickName(), mode.substr(0, 1) + " :is unknown mode char to me\r\n")));
 	if (channel->isOperator(client) == false)
-		throw(std::runtime_error("Not an operator!"));
+		throw(std::runtime_error(creatBuffer("482", client->getNickName(), args[0] + " :You're not channel operator\r\n")));
 	char op = mode[0];
 	size_t argIndex = 2;
 	int notE = 0;
-	for (size_t i = 1; i < mode.size(); i++)
+	std::string appliedModes;
+	std::string appliedArgs;
+	for (size_t i = 0; i < mode.size(); i++)
 	{
+		if (mode[i] == '+' || mode[i] == '-'){
+			op = mode[i];
+			continue;
+		}
 		if (mode[i] == 'i')
+		{
 			channel->setInviteOnly((op == '+') ? true : false);
-		else if (mode[i] == 't')
+			appliedModes += op == '+' ? "+i" : "-i";
+		}
+		else if (mode[i] == 't'){
 			channel->setTopicRestricted((op == '+') ? true : false);
+			appliedModes += op == '+' ? "+t" : "-t";
+		}
 		else if (mode[i] == 'l'){
 			if (op == '+'){
 				if (argIndex >= args.size()){
@@ -561,37 +620,39 @@ void Response::_modeCmd()
 					_buffer.clear();
 					_buffer += ":server NOTICE <" + client->getNickName() + "> Invalid channel limit";
 					_buffer += "\r\n";
+					client->appendToResponse(_buffer);
 				}
 				else{
 					channel->setUserLimit(true);
 					channel->setMaxMembers((int)value);
+					appliedModes += "+l";
+					appliedArgs += args[argIndex] + " ";
 				}
 				argIndex++;
 			}
-			else
+			else{
+				appliedModes += "-l";
 				channel->setUserLimit(false);
+				channel->setMaxMembers(0);
+			}
 		}
 		else if (mode[i] == 'k'){
-			if (argIndex >= args.size()){
+			if (op == '+'){
+				if (argIndex >= args.size()){
 					notE = 1;
 					break;
 				}
-			if (op == '+'){
 				channel->setPass(args[argIndex]);
 				channel->setChannelPass(true);
+				appliedArgs += args[argIndex] + " ";
+				appliedModes += "+k";
+				argIndex++;
 			}
 			else{
-				if (channel->getPass() != args[argIndex]){
-					_buffer.clear();
-					_buffer += ":server NOTICE <" + client->getNickName() + "> incorrect password";
-					_buffer += "\r\n";
-				}
-				else{
-					channel->setPass("");
-					channel->setChannelPass(false);				
-				}
+				appliedModes += "-k";
+				channel->setPass("");
+				channel->setChannelPass(false);	
 			}
-			argIndex++;
 		}
 		else if (mode[i] == 'o'){
 			if (argIndex >= args.size()){
@@ -601,31 +662,30 @@ void Response::_modeCmd()
 			Client* addedOp = server->getClientByName(args[argIndex]);
 			if (addedOp == NULL){
 				_buffer.clear();
-				_buffer += ":server NOTICE <" + client->getNickName() + "> there is no client with this name: " + args[argIndex];
-				_buffer += "\r\n";
+				client->appendToResponse(creatBuffer("401", client->getNickName(), args[argIndex] + " :No such nick/channel\r\n"));
 			}
-			else if (channel->isMemberByName(args[argIndex]) == NULL){
-				_buffer.clear();
-				_buffer += ":server NOTICE <" + client->getNickName() + "> this client: " + args[argIndex] + " is not a member";
-				_buffer += "\r\n";
-			}
+			else if (channel->isMember(addedOp) == false)
+				client->appendToResponse(creatBuffer("441", client->getNickName(), addedOp->getNickName() + " #" + channelName + " :They aren't on that channel\r\n"));
 			else if (op == '+'){
 				if (channel->isOperator(addedOp) == false)
+				{
+					appliedModes += "+o";
+					appliedArgs += addedOp->getNickName() + " ";
 					channel->addOperator(addedOp);
+				}
 			}
 			else{
-				if (channel->isOperator(addedOp))
+				if (channel->isOperator(addedOp)){
+					appliedModes += "-o";
+					appliedArgs += addedOp->getNickName() + " ";
 					channel->removeOperator(addedOp);
+				}
 			}
 			argIndex++;
 		}
-		else{
-			_buffer.clear();
-			_buffer += ":server 472 " + client->getNickName() + " ";
-			_buffer += mode[i];
-			_buffer += " :is unknown mode char to me\r\n";
-		}
-		if (_buffer.size() > 0){
+		else
+			client->appendToResponse(creatBuffer("472", client->getNickName(), std::string(1, mode[i]) + " :is unknown mode char to me\r\n"));
+		if (!_buffer.empty()){
 			server->sendResponse(client);
 			_buffer.clear();
 		}
@@ -636,6 +696,16 @@ void Response::_modeCmd()
 		_buffer += "\r\n";
 		server->sendResponse(client);
 		_buffer.clear();
+	}
+	if (!appliedModes.empty()){
+		validateChannelModes(appliedModes, appliedArgs);
+		std::string modemsg;
+		modemsg += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " MODE #" + channelName + " " + appliedModes;
+		if (!appliedArgs.empty())
+			modemsg += " " + appliedArgs;
+		modemsg += "\r\n";
+		sendToChannelMembers(channel, modemsg, server);
+		modemsg.clear();
 	}
 }
 
