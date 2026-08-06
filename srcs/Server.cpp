@@ -241,5 +241,6 @@ void	Server::executeCommand(Client *client, std::string command) {
 	catch (std::runtime_error &e) {
 		response = std::string(e.what());
 		client->appendToResponse(response);
+		sendResponse(client);
 	}
 }
