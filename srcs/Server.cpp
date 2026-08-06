@@ -108,7 +108,6 @@ void Server::extractCommand(Client *client)
     size_t pos;
     while ((pos = client->getBuffer().find("\n")) != std::string::npos && !client->getDisconnected())
     {
-		/* TODO: Implement this */
         size_t commandEnd = pos;
         if (commandEnd > 0 && client->getBuffer()[commandEnd - 1] == '\r')
             commandEnd--;
@@ -133,7 +132,8 @@ int Server::readRequest(Client *client)
         return 1;
     }
     client->appendBuffer(std::string(buffer, read));
-    extractCommand(client);
+	if (buffer[read - 1] == '\n')
+    	extractCommand(client);
     if (client->getDisconnected() == true)
         return 1;
     return 0;
