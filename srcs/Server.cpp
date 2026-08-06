@@ -36,7 +36,9 @@ void Server::initSocket()
     _socket = socket(AF_INET, SOCK_STREAM, 0);
     if (_socket < 0)
         throw std::runtime_error("Error: Socket failed");
-    int opt = 1;;
+    if (fcntl(_socket, F_SETFL, O_NONBLOCK) == -1)
+        throw std::runtime_error("Error: fcntl failed");
+    int opt = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) 
         throw std::runtime_error("Error");
 
@@ -67,6 +69,12 @@ void Server::acceptClient()
         std::cerr << "Error: accept failed\n";
         return ;
     }
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        std::cerr << "Error: fcntl failed\n";
+        close(client_fd);
+        return;
+    }
     pollfd info;
     info.fd = client_fd;
     info.events = POLLIN;
@@ -79,7 +87,10 @@ void Server::acceptClient()
 void Server::removeClient(Client *client)
 {
     for (std::set<Channel*>::iterator it = client->getChannels().begin(); it != client->getChannels().end(); ++it)
+    {
         (*it)->removeClient(client);
+        manager.removeIfEmpty((*it)->getName());
+    }
     Clients.erase(client->getFd());
     for (std::vector<pollfd>::iterator it = pollfds.begin(); it != pollfds.end(); it++)
     {
@@ -232,6 +243,11 @@ void	Server::executeCommand(Client *client, std::string command) {
 		throw(std::runtime_error("Client [NULL] sent the command: " + command));
 	std::string response;
 	try {
+		if (command.size() > MAX_COMMAND_SIZE)
+        {
+            client->setDisconnected(true);
+			throw(std::runtime_error(SERVER_NAME + "999 " + client->getNickName() + ":Command/Message too large\r\n"));
+        }
 		Command cmd(command);
 		Response resp(cmd, client, _password, manager, this);
 		resp.runCmd();
@@ -239,5 +255,6 @@ void	Server::executeCommand(Client *client, std::string command) {
 	catch (std::runtime_error &e) {
 		response = std::string(e.what());
 		client->appendToResponse(response);
+		sendResponse(client);
 	}
 }
