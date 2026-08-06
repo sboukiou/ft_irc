@@ -453,22 +453,22 @@ void 	Response::_topicCmd() {
 
 void	Response::_privMsgCmd() {
 	if (client->getRegistered() == false)
-		throw(std::runtime_error(SERVER_NAME + "451 " + client->getNickName() +
+		throw(std::runtime_error(SERVER_NAME + " 451 " + client->getNickName() +
 					" :You have not registered\r\n"));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() == 0)
-		throw(std::runtime_error(SERVER_NAME + "411" + client->getNickName() +" :No recipient given (PRIVMSG)\r\n"));
+		throw(std::runtime_error(SERVER_NAME + " 411" + client->getNickName() +" :No recipient given (PRIVMSG)\r\n"));
 	if (args.size() == 1)
-		throw(std::runtime_error(SERVER_NAME + "412 " + client->getNickName() + " :No text to send\r\n"));
+		throw(std::runtime_error(SERVER_NAME + " 412 " + client->getNickName() + " :No text to send\r\n"));
 	if (args[0][0] == '#') {
 		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
 		Channel *target = manager.find(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error(SERVER_NAME + "403 " + client->getNickName() + args[0] +  " :No such channel\r\n"));
+			throw(std::runtime_error(SERVER_NAME + " 403 " + client->getNickName() + args[0] +  " :No such channel\r\n"));
 		std::set<Client *> clients = target->getMembers();
 		if (std::find(clients.begin(), clients.end(), client) == clients.end())
-			throw(std::runtime_error(SERVER_NAME + "404 " + client->getNickName() +  args[0] + " :Cannot send to channel\r\n"));
+			throw(std::runtime_error(SERVER_NAME + " 404 " + client->getNickName() +  args[0] + " :Cannot send to channel\r\n"));
 		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 			if (*it != client) {
 				_buffer = ":" + client->getNickName() + "!";
@@ -490,7 +490,7 @@ void	Response::_privMsgCmd() {
 	else {
 		Client *target = server->getClientByName(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error(SERVER_NAME + "401 " + client->getNickName() +  args[0] + " :No such nick/channel\r\n"));
+			throw(std::runtime_error(SERVER_NAME + " 401 " + client->getNickName() +  args[0] + " :No such nick/channel\r\n"));
 		_buffer.clear();
 		_buffer = ":" + client->getNickName() + "!";
 		_buffer += client->getUserName();
@@ -511,9 +511,9 @@ void	Response::_privMsgCmd() {
 
 void	Response::_listCmd() {
 	if (cmd.getArgs().size() != 0)
-		throw(std::runtime_error(SERVER_NAME + "999 " + client->getNickName() + " :LIST does not accept parameters\r\n"));
+		throw(std::runtime_error(SERVER_NAME + " 999 " + client->getNickName() + " :LIST does not accept parameters\r\n"));
 	if (client->getRegistered() == false)
-		throw(std::runtime_error(SERVER_NAME + "451 " + client->getNickName() + " :You have not registered\r\n"));
+		throw(std::runtime_error(SERVER_NAME + " 451 " + client->getNickName() + " :You have not registered\r\n"));
 	std::set<Channel *> channels = client->getChannels();
 	for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
 		_buffer.clear();
@@ -657,9 +657,9 @@ void Response::_modeCmd()
 void	Response::_whoCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 	if (client->getRegistered() == false)
-		throw(std::runtime_error(SERVER_NAME + "451 " + client->getNickName() + " :You have not registered\r\n"));
+		throw(std::runtime_error(SERVER_NAME + " 451 " + client->getNickName() + " :You have not registered\r\n"));
 	if (args.size() > 2)
-		throw(std::runtime_error(SERVER_NAME + "999 " + client->getNickName() + " :who Takes only two arguments\r\n"));
+		throw(std::runtime_error(SERVER_NAME + " 999 " + client->getNickName() + " :who Takes only two arguments\r\n"));
 	_buffer.clear();
 	if (args.size() == 0) {
 		std::map<int, Client *> clients = server->getClients();
@@ -679,10 +679,10 @@ void	Response::_whoCmd() {
 		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
 		Channel *target = manager.getOrCreateChan(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error(SERVER_NAME + "403 " + client->getNickName() + args[0] +  " :No such channel\r\n"));
+			throw(std::runtime_error(SERVER_NAME + " 403 " + client->getNickName() + args[0] +  " :No such channel\r\n"));
 		std::set<Client *> clients;
 		if (args.size() == 2 && args[0][1] != 'o')
-					throw(std::runtime_error(SERVER_NAME + "700 " + client->getNickName() + ":Invalid option !"));
+					throw(std::runtime_error(SERVER_NAME + " 700 " + client->getNickName() + ":Invalid option !"));
 		else if (args.size() == 2 && args[0][1] == 'o')
 			clients = target->getOperators();
 		else
@@ -701,7 +701,7 @@ void	Response::_whoCmd() {
 	else {
 			Client *target = server->getClientByName(args[0]);
 			if (target == NULL)
-				throw(std::runtime_error(SERVER_NAME + "401 " + client->getNickName() +  args[0] + " :No such nick/channel\r\n"));
+				throw(std::runtime_error(SERVER_NAME + " 401 " + client->getNickName() +  args[0] + " :No such nick/channel\r\n"));
 			_buffer += ":IRC98 352 " + client->getNickName() + " ";
 			_buffer += (target->getRegistered() ? target->getUserName() : "*") + " ";
 			_buffer += " ";
