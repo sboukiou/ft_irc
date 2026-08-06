@@ -22,12 +22,15 @@ int main(int ac, char **av)
 
         if (bot.connectServer())
         {
-            std::cout << "Connected to server successfully!\n";
-
+            
             bot.authenticate();
-
+            int connected = 1;
             while (bot.receive())
-                ;
+            {
+                if (connected == 1)
+                    std::cout << "Connected to server successfully!\n";
+                connected = -1;
+            }
             
         }
     }
