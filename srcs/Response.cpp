@@ -205,10 +205,8 @@ void	Response::_joinCmd()
 		std::string channelName = channels[i];
 		std::string password = (i < passwords.size()) ? passwords[i] : "";
 		if (!isValidChannelName(channelName)){
-			_buffer = creatBuffer("476", client->getNickName().size() ? client->getNickName() : "*", channelName + " :Bad Channel Mask\r\n");
-			client->appendToResponse(_buffer);
+			client->appendToResponse(creatBuffer("476", client->getNickName().size() ? client->getNickName() : "*", channelName + " :Bad Channel Mask\r\n"));
 			server->sendResponse(client);
-			_buffer.clear();
 			continue;
 		}
 		channelName.erase(0, 1);
@@ -226,18 +224,14 @@ void	Response::_joinCmd()
 			continue;
 		else if (channel->getUserLimit() && channel->getMemberCount() >= channel->getMaxMembers())
 		{
-			_buffer += creatBuffer("471", client->getNickName(), "#" + channelName + " :Cannot join channel (+l)\r\n");
-			client->appendToResponse(_buffer);
+			client->appendToResponse(creatBuffer("471", client->getNickName(), "#" + channelName + " :Cannot join channel (+l)\r\n"));
 			server->sendResponse(client);
-			_buffer.clear();
 			continue;
 		}
 		else if (channel->getChannelPass() && password != channel->getPass())
 		{
-			_buffer += creatBuffer("475", client->getNickName(), "#" + channelName + " :Cannot join channel (+k)\r\n");
-			client->appendToResponse(_buffer);
+			client->appendToResponse(creatBuffer("475", client->getNickName(), "#" + channelName + " :Cannot join channel (+k)\r\n"));
 			server->sendResponse(client);
-			_buffer.clear();
 			continue;
 		}
 		else if (channel->getInviteOnly())
@@ -246,10 +240,8 @@ void	Response::_joinCmd()
 				client->removeInvitedChannel(channel);
 			else
 			{
-				_buffer += creatBuffer("473", client->getNickName(), "#" + channelName + " :Cannot join channel (+i)\r\n");
-				client->appendToResponse(_buffer);
+				client->appendToResponse(creatBuffer("473", client->getNickName(), "#" + channelName + " :Cannot join channel (+i)\r\n"));
 				server->sendResponse(client);
-				_buffer.clear();
 				continue;
 			}
 		}
@@ -257,7 +249,7 @@ void	Response::_joinCmd()
 			channel->addClient(client);
 		client->appendChannels(channel);
 		std::set<Client*> &members = channel->getMembers();
-		_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " JOIN #" + channelName;
+		_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " JOIN :#" + channelName;
 		_buffer += "\r\n";
 		for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
 		{	
@@ -266,29 +258,12 @@ void	Response::_joinCmd()
 		}
 		_buffer.clear();
 		if (channel->getTopic().empty() == false)
-		{
-			std::string topic;
-			topic += ":";
-			topic += SERVER_NAME;
-			topic += " 332 " + client->getNickName() + " #" + channelName + " :" + channel->getTopic() + "\r\n";
-			client->appendToResponse(topic);
-			server->sendResponse(client);
-			topic.clear();
-		}
-		else{
-			std::string topic;
-			topic += ":";
-			topic += SERVER_NAME;
-			topic += " 331 " + client->getNickName() + " #" + channelName + " :No topic is set\r\n";
-			client->appendToResponse(topic);
-			server->sendResponse(client);
-			topic.clear();
-		}
+			client->appendToResponse(creatBuffer("332", client->getNickName(), "#" + channelName + " :" + channel->getTopic() + "\r\n"));
+		else
+			client->appendToResponse(creatBuffer("331", client->getNickName(), "#" + channelName + " :No topic is set\r\n"));
 		std::set<Client*>::iterator last = members.end();
 		--last;
-		_buffer += ":";
-		_buffer += SERVER_NAME;
-		_buffer += " 353 " + client->getNickName() + " = #" +channelName + " :";
+		_buffer += creatBuffer("353", client->getNickName(), "= #" + channelName + " :");
 		for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
 		{
 			if (channel->getOperators().find(*it) != channel->getOperators().end())
@@ -297,10 +272,10 @@ void	Response::_joinCmd()
 			if (it != last)
 				_buffer += " ";
 		}
-		_buffer += "\r\n:";
-		_buffer += SERVER_NAME;
-		_buffer += " 366 " + client->getNickName() + " #" + channelName + " :End of /NAMES list.\r\n";
+		_buffer += "\r\n" + creatBuffer("366", client->getNickName(), "#" + channelName + " :End of /NAMES list\r\n");
 		client->appendToResponse(_buffer);
+		server->sendResponse(client);
+		_buffer.clear();
 	}
 }
 
