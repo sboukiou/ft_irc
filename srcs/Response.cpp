@@ -307,37 +307,40 @@ void	Response::_joinCmd()
 void	Response::_kickCmd()
 {
 	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client not registred yet!"));
+		throw std::runtime_error(creatBuffer("451", client->getNickName().empty() ? "*" : client->getNickName(), " :You have not registered\r\n"));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
-	if ((args.size() != 2 && args.size() != 3))
-		throw(std::runtime_error("Invalid number of args for KICK command!"));
+	if (args.size() < 2)
+    	throw std::runtime_error(creatBuffer("461", client->getNickName(), " KICK :Not enough parameters\r\n"));
 	std::string channelName = args[0];
 	if (!isValidChannelName(channelName))
-		throw(std::runtime_error("Invalid channel name [# at the start]!"));
+		throw std::runtime_error(creatBuffer("403", client->getNickName(), " " + channelName + " :No such channel\r\n"));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
-		throw(std::runtime_error("There is no channel with this name!"));
+		throw(std::runtime_error(creatBuffer("403", client->getNickName(), " " + channelName + " :No such channel\r\n")));
+	if (!channel->isMember(client))
+    	throw std::runtime_error(creatBuffer("442", client->getNickName(), " #" + channelName + " :You're not on that channel\r\n"));
 	if (!channel->isOperator(client))
-		throw(std::runtime_error("Your not operator!"));
+    	throw std::runtime_error(creatBuffer("482", client->getNickName(), " #" + channelName + " :You're not channel operator\r\n"));
 	Client* kickedClient = channel->isMemberByName(args[1]);
 	if (kickedClient == NULL)
-		throw(std::runtime_error("No client with this nickName!"));
-	_buffer += "Your kicked from the channel: " + channelName;
-	if (args.size() == 3)
-		_buffer += " because of " + args[2];
-	_buffer += "\r\n";
-	std::string nickname = kickedClient->getNickName();
-	kickedClient->appendToResponse(_buffer);
-	server->sendResponse(kickedClient);
-	channel->removeClient(kickedClient);
-	if (client->getDisconnected() == true)
-		server->removeClient(kickedClient);
-	_buffer.clear();
-	_buffer += nickname + " got kicked from the channel: " + channelName;
-	if (args.size() == 3)
-		_buffer += " because of " + args[2];
+		throw(std::runtime_error(creatBuffer("441", client->getNickName(), args[1] + " #" + channelName + " :They aren't on that channel\r\n")));
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " KICK #" + channelName + " " + kickedClient->getNickName();
+	if (args.size() > 2 && args[2][0] == ':')
+	{
+		_buffer += " ";
+		for (size_t i = 2; i < args.size(); i++)
+		{
+			_buffer += args[i];
+			if (i + 1 != args.size())
+				_buffer += " ";
+		}
+	}
+	else if (args.size() > 2)
+		_buffer += " :" + args[2];
+	else
+		_buffer += " :" + client->getNickName();
 	_buffer += "\r\n";
 	std::set<Client*> &members = channel->getMembers();
 	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
@@ -345,6 +348,7 @@ void	Response::_kickCmd()
 		(*it)->appendToResponse(_buffer);
 		server->sendResponse(*it);
 	}
+	channel->removeClient(kickedClient);
 	_buffer.clear();
 }
 void	Response::_pingCmd()
