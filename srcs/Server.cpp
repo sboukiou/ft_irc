@@ -236,7 +236,7 @@ void	Server::executeCommand(Client *client, std::string command) {
 		resp.runCmd();
 	}
 	catch (std::runtime_error &e) {
-		response = "Error: " + std::string(e.what());
+		response = std::string(e.what());
 		client->appendToResponse(response);
 	}
 }
