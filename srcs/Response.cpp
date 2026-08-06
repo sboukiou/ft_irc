@@ -30,9 +30,11 @@ void	Response::_helpCmd() {
 
 	_buffer.clear();
 	_buffer += "             [man  3 ircserv]                 \n\n* Usage: <COMMAND> <ARGS>\nAvailable Commands:\n";
-	_buffer += "* [HELP] [NICK] [UESR] [QUIT] [CLEAR]\n";
+	_buffer += "* [PASS] [NICK] [UESR] [PING] [QUIT] [HELP] [JOIN] [PART] [PRIVMSG] [NOTICE] \
+		[MODE] [TOPIC] [KICK] [INVITE] [NAMES] [LIST] [WHO] [WHOIS] [CLEAR]\n";
 	_buffer += "\n\r";
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 
 bool isValidNickname(const std::string& nick)
@@ -106,6 +108,7 @@ void	Response::_quitCmd() {
 	_buffer += "\r\n";
 	client->setDisconnected(true);
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 
 bool isValidUsername(const std::string &user)
@@ -153,12 +156,16 @@ void	Response::_userCmd(void) {
 		_buffer += " " + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + "\r\n";
 	}
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
+	_buffer.clear();
 }
 
 void	Response::_passCmd()
 {
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
+	if (client->getDisconnected() == true)
+		return ;
 	if (args.size() != 1)
 		throw(std::runtime_error(creatBuffer("461", client->getNickName().size() ? client->getNickName() : "*", " :Not enough parameters\r\n")));
 	if (client->getRegistered() == true) 
@@ -339,6 +346,7 @@ void	Response::_pingCmd()
 	_buffer += args[0];
 	_buffer += "\r\n";
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 void ::Response::_clearCmd() {
 	std::vector<std::string> args = cmd.getArgs();
@@ -347,6 +355,7 @@ void ::Response::_clearCmd() {
 	_buffer.clear();
 	_buffer = "\x1B[3J\x1B[2J\x1B[H";
 	client->appendToResponse(_buffer);
+	server->sendResponse(client);
 }
 
 void ::Response::_unknownCmd() {
@@ -492,8 +501,6 @@ void	Response::_privMsgCmd() {
 		_buffer += "\r\n";
 		target->appendToResponse(_buffer);
 		server->sendResponse(target);
-		client->appendToResponse(_buffer);
-		server->sendResponse(client);
 	}
 }
 
@@ -764,6 +771,7 @@ void	Response::_whoCmd() {
 			_buffer += SERVER_NAME;
 			_buffer += " IRC98 " + target->getNickName() + " H@ :0 ";
 			_buffer += target->getRealName();
+			_buffer += "\r\n";
 			client->appendToResponse(_buffer);
 			server->sendResponse(client);
 	}
