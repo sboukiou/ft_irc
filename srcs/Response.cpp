@@ -396,52 +396,36 @@ void 	Response::_topicCmd() {
 		throw(std::runtime_error(creatBuffer("461", client->getNickName(), " :Not enough parameters\r\n")));
 	std::string channelName = args[0];
 	if (!isValidChannelName(channelName))
-		throw(std::runtime_error(creatBuffer("403", client->getNickName(), " :No such channel\r\n")));
+		throw(std::runtime_error(creatBuffer("476", client->getNickName(), args[0] + " :Bad Channel Mask\r\n")));
 	channelName.erase(0, 1);
 	Channel *channel = manager.find(channelName);
 	if (channel == NULL)
-		throw(std::runtime_error(creatBuffer("403", client->getNickName(), " :No such channel\r\n")));
+		throw(std::runtime_error(creatBuffer("403", client->getNickName(), args[0] + " :No such channel\r\n")));
 	std::string topic;
 	if (!channel->isMember(client))
-		throw(std::runtime_error(creatBuffer("442", client->getNickName(), " :You're not on that channel\r\n")));
+		throw(std::runtime_error(creatBuffer("442", client->getNickName(), args[0] + " :You're not on that channel\r\n")));
 	if (args.size() == 1)
 	{
 		topic = channel->getTopic();
 		if (topic.size() == 0)
-		{
-			topic += ":";
-			topic += SERVER_NAME;
-			topic += " 331 " + client->getNickName() + " #" + channelName + " :No topic is set\r\n";
-			throw(std::runtime_error(topic));
-		}
-		_buffer += ":";
-		_buffer += SERVER_NAME;
-		_buffer += " 332 " + client->getNickName() + " #" + channelName + " :" + channel->getTopic();
-		_buffer += "\r\n";
-		client->appendToResponse(_buffer);
+			throw(std::runtime_error(creatBuffer("331", client->getNickName(), "#" + channelName + " :No topic is set\r\n")));
+		client->appendToResponse(creatBuffer("332", client->getNickName(), "#" + channelName + " :" + channel->getTopic() + "\r\n"));
 		server->sendResponse(client);
-		_buffer.clear();
 		return ;
 	}
 	if (channel->isTopicRestricted() && !channel->isOperator(client))
-		throw(std::runtime_error(creatBuffer("482", client->getNickName(), " :You're not an operator of this channel\r\n")));
-	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " TOPIC #" + channelName + " :";
-	if (args[1][0] != ':'){
-		_buffer += args[1];
+		throw(std::runtime_error(creatBuffer("482", client->getNickName(), "#" + channelName + " :You're not channel operator\r\n")));
+	if (args[1][0] != ':')
 		topic = args[1];
-	}
-	else{
+	else if (args[1][0] == ':'){
 		args[1].erase(0, 1);
 		for (size_t i = 1; i < args.size(); i++){
-			_buffer += args[i];
 			topic += args[i];
-			if (i + 1 != args.size()){
-				_buffer += " ";
+			if (i + 1 != args.size())
 				topic += " ";
-			}
 		}
 	}
-	_buffer += "\r\n";
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " TOPIC #" + channelName + " :" + topic + "\r\n";
 	channel->setTopic(topic);
  	std::set<Client*> &members = channel->getMembers();
 	for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
