@@ -122,7 +122,8 @@ int Server::readRequest(Client *client)
         return 1;
     }
     client->appendBuffer(std::string(buffer, read));
-    extractCommand(client);
+	if (buffer[read - 1] == '\n')
+    	extractCommand(client);
     if (client->getDisconnected() == true)
         return 1;
     return 0;
