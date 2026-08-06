@@ -343,6 +343,8 @@ void	Response::_pingCmd()
 	if (args.size() != 1)
 		throw(std::runtime_error("Invalid number of args for USER command!\r\n"));
 	_buffer += "PONG ";
+	if (args[0][0] != ':')
+		_buffer += ":";
 	_buffer += args[0];
 	_buffer += "\r\n";
 	client->appendToResponse(_buffer);
@@ -505,11 +507,12 @@ void	Response::_privMsgCmd() {
 }
 
 void	Response::_listCmd() {
-	if (cmd.getArgs().size() != 0)
-		throw(std::runtime_error(SERVER_NAME + " 999 " + client->getNickName() + " :LIST does not accept parameters\r\n"));
 	if (client->getRegistered() == false)
 		throw(std::runtime_error(SERVER_NAME + " 451 " + client->getNickName() + " :You have not registered\r\n"));
 	std::set<Channel *> channels = client->getChannels();
+	if (channels.size() == 0)
+		throw(std::runtime_error(SERVER_NAME + " 451 " + client->getNickName() + " \
+					:You have not joined any channels\r\n"));
 	for (std::set<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
 		_buffer.clear();
 		_buffer  += ":";
@@ -520,7 +523,10 @@ void	Response::_listCmd() {
 		std::stringstream stream;
 		stream << (*it)->getMaxMembers();
 		_buffer +=  stream.str();
-		_buffer += ": " + (*it)->getTopic();
+		if ((*it)->getTopic().size() == 0)
+			_buffer += ": No topic yet";
+		else
+			_buffer += ": " + (*it)->getTopic();
 		_buffer += "\r\n";
 		client->appendToResponse(_buffer);
 		server->sendResponse(client);
@@ -739,9 +745,9 @@ void	Response::_whoCmd() {
 	}
 	else if (args.size() == 1 && args[0][0] == '#') {
 		args[0].erase(std::remove(args[0].begin(), args[0].end(), '#'), args[0].end());
-		Channel *target = manager.getOrCreateChan(args[0]);
+		Channel *target = manager.find(args[0]);
 		if (target == NULL)
-			throw(std::runtime_error(SERVER_NAME + " 403 " + client->getNickName() + args[0] +  " :No such channel\r\n"));
+			throw(std::runtime_error(SERVER_NAME + " 403 " + client->getNickName() + " " + args[0] +  " :No such channel\r\n"));
 		std::set<Client *> clients;
 		if (args.size() == 2 && args[0][1] != 'o')
 					throw(std::runtime_error(SERVER_NAME + " 700 " + client->getNickName() + ":Invalid option !"));
@@ -749,15 +755,13 @@ void	Response::_whoCmd() {
 			clients = target->getOperators();
 		else
 			clients = target->getMembers();
-		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
-			_buffer += ":IRC98 352 " + client->getNickName() + " ";
-			_buffer += ((*it)->getRegistered() ? (*it)->getUserName() : "*") + " ";
-			_buffer += " ";
-			_buffer += SERVER_NAME;
-			_buffer += " IRC98 " + (*it)->getNickName() + " H@ :0 ";
-			_buffer += (*it)->getRealName();
-			_buffer += "\r\n";
-		}
+		_buffer += ":IRC98 352 " + client->getNickName() + " ";
+		_buffer += (client->getRegistered() ? client->getNickName() : "*") + " ";
+		_buffer += " ";
+		_buffer += SERVER_NAME + " ";
+		for (std::set<Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+			_buffer += (*it)->getRealName() + " ";
+		_buffer += "\r\n";
 			client->appendToResponse(_buffer);
 			server->sendResponse(client);
 	}
@@ -778,9 +782,12 @@ void	Response::_whoCmd() {
 
 }
 
+
 void	Response::_namesCmd() {
 	std::vector<std::string> args = cmd.getArgs();
 
+	if (client->getRegistered() == false)
+		throw(std::runtime_error(SERVER_NAME + " 451 " + client->getNickName() + " :You have not registered\r\n"));
 	_buffer.clear();
 	_buffer += ":";
 	_buffer += SERVER_NAME;
