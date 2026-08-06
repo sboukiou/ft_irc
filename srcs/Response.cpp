@@ -694,6 +694,7 @@ void	Response::_whoCmd() {
 			_buffer += SERVER_NAME;
 			_buffer += " IRC98 " + (*it)->getNickName() + " H@ :0 ";
 			_buffer += (*it)->getRealName();
+			_buffer += "\r\n";
 		}
 			client->appendToResponse(_buffer);
 			server->sendResponse(client);
