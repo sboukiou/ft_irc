@@ -2,7 +2,7 @@
 # define MACROS_HPP
 
 
-# define SERVER_NAME std::string("penguin")
+# define SERVER_NAME std::string("localhost")
 # define IRC_NAME "IRC98"
 
 #include <string>
