@@ -12,6 +12,8 @@
 #include "ChannelManager.hpp"
 #include "Channel.hpp"
 #include <netinet/in.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 class Server
 {

@@ -36,7 +36,9 @@ void Server::initSocket()
     _socket = socket(AF_INET, SOCK_STREAM, 0);
     if (_socket < 0)
         throw std::runtime_error("Error: Socket failed");
-    int opt = 1;;
+    if (fcntl(_socket, F_SETFL, O_NONBLOCK) == -1)
+        throw std::runtime_error("Error: fcntl failed");
+    int opt = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) 
         throw std::runtime_error("Error");
 
@@ -66,6 +68,12 @@ void Server::acceptClient()
     {
         std::cerr << "Error: accept failed\n";
         return ;
+    }
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        std::cerr << "Error: fcntl failed\n";
+        close(client_fd);
+        return;
     }
     pollfd info;
     info.fd = client_fd;
@@ -98,6 +106,7 @@ void Server::removeClient(Client *client)
 void Server::extractCommand(Client *client)
 {
     size_t pos;
+    std::cout << "Current buffer: [" << client->getBuffer() << "]\n";
     while ((pos = client->getBuffer().find("\n")) != std::string::npos && !client->getDisconnected())
     {
 		/* TODO: Implement this */
@@ -124,6 +133,9 @@ int Server::readRequest(Client *client)
         client->setDisconnected(true);
         return 1;
     }
+    std::cout << "Received: [";
+std::cout.write(buffer, read);
+std::cout << "] size=" << read << std::endl;
     client->appendBuffer(std::string(buffer, read));
     extractCommand(client);
     if (client->getDisconnected() == true)
