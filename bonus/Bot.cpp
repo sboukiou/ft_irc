@@ -49,11 +49,9 @@ bool Bot::receive()
 {
     char buffer[1024];
     ssize_t bytes = recv(_socketFd, buffer, sizeof(buffer), 0);
-    if (bytes < 0)
-        throw std::runtime_error("Error: recv failed");
-    else if (bytes == 0)
+    if (bytes <= 0)
     {
-        std::cout << "Server disconnected\n";
+        std::cout << "Disconnected: authentication failed or server closed the connection.\n";
         return false;
     }
     _inputBuffer.append(buffer, bytes);
