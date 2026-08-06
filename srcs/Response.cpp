@@ -865,34 +865,32 @@ void	Response::_whoisCmd() {
 
 void	Response::_noticeCmd(){
 	if (client->getRegistered() == false)
-		throw(std::runtime_error("Client not registred yet!"));
+		throw std::runtime_error(creatBuffer("451", client->getNickName().empty() ? "*" : client->getNickName(), " :You have not registered\r\n"));
 	std::vector<std::string> args = cmd.getArgs();
 	_buffer.clear();
 	if (args.size() < 2)
 		return ;
-	
-	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " ";
+	_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " NOTICE " + args[0] + " ";
+	if (args[1][0] != ':')
+		_buffer += args[1];
+	else{
+		for (size_t i = 1; i < args.size(); i++){
+			_buffer += args[i];
+			if (i + 1 != args.size())
+				_buffer += " ";
+		}
+	}
+	_buffer += "\r\n";
 	if (args[0][0] == '#') {
 		args[0].erase(0, 1);
 		Channel *channel = manager.find(args[0]);
 		if (channel == NULL)
 			return ;
 		std::set<Client *> &members = channel->getMembers();
-		_buffer += "NOTICE #" + args[0] + " ";
-		if (args.size() == 2 && args[1].size() == 1 && args[1][0] == ':')
-			_buffer += ":";
-		else if (args[1][0] != ':')
-			_buffer += args[1];
-		else{
-			for (size_t i = 1; i < args.size(); i++){
-				_buffer += args[i];
-				if (i + 1 != args.size())
-					_buffer += " ";
-			}
-		}
-		_buffer += "\r\n";
 		for (std::set<Client*>::iterator it = members.begin(); it != members.end(); it++)
 		{
+			if (*it == client)
+				continue ;
 			(*it)->appendToResponse(_buffer);
 			server->sendResponse(*it);
 		}
@@ -901,19 +899,6 @@ void	Response::_noticeCmd(){
 		Client *target = server->getClientByName(args[0]);
 		if (target == NULL)
 			return ;
-		_buffer += args[0] + " ";
-		if (args.size() == 2 && args[1].size() == 1 && args[1][0] == ':')
-			_buffer += ":";
-		else if (args[1][0] != ':')
-			_buffer += args[1];
-		else{
-			for (size_t i = 1; i < args.size(); i++){
-				_buffer += args[i];
-				if (i + 1 != args.size())
-					_buffer += " ";
-			}
-		}
-		_buffer += "\r\n";
 		target->appendToResponse(_buffer);
 		server->sendResponse(target);
 	}
