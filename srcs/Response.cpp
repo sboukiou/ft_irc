@@ -62,7 +62,7 @@ void	Response::_nickNameCmd() {
         throw std::runtime_error(creatBuffer("431", "*", " :No nickname given\r\n"));
 	if (!isValidNickname(args[0]))
         throw std::runtime_error(creatBuffer("432", args[0], " :Erroneous nickname\r\n"));
-	if (args[0] == "ircbot" || server->getClientByName(args[0]))
+	if (server->getClientByName(args[0]))
 		throw(std::runtime_error(creatBuffer("433", args[0], " :Nickname is already in use\r\n")));
 	if (client->getRegistered() == true){
 		_buffer += ":" + client->getNickName() + "!" + client->getUserName() + "@" + SERVER_NAME + " NICK :" + args[0] + "\r\n";
